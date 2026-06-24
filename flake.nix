@@ -15,7 +15,7 @@
 
       flake = {
         homeModules.helium = import ./modules/home-manager.nix {inherit (inputs) self;};
-        nixosModules.helium = import ./modules/nixos.nix;
+        nixosModules.helium = import ./modules/nixos.nix {inherit (inputs) self;};
       };
 
       perSystem = {pkgs, system, ...}: let
@@ -50,7 +50,6 @@
                 useGlobalPkgs = true;
                 useUserPackages = true;
                 users.helium-test = {
-                  imports = [inputs.self.homeModules.helium];
                   home.enableNixpkgsReleaseCheck = false;
                   home.stateVersion = "26.05";
                   programs.helium = {

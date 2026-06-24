@@ -1,4 +1,4 @@
-{config, lib, ...}: let
+{self}: {config, lib, options, ...}: let
   # Find all Home Manager users who enabled helium
   enabledUsers = lib.filterAttrs (_: user: user.programs.helium.enable or false) (
     config.home-manager.users or {}
@@ -12,8 +12,7 @@
         mode = "0644";
       }
   )
-  enabledUsers
-  // lib.mapAttrs' (
+  enabledUsers // lib.mapAttrs' (
     name: user:
       lib.nameValuePair "helium/policies/managed/helium-${name}.json" {
         text = user.programs.helium.finalPolicyJson;
@@ -22,7 +21,12 @@
   )
   enabledUsers;
 in {
-  config = lib.mkIf (enabledUsers != {}) {
-    environment.etc = policyFiles;
-  };
+  config = lib.mkMerge [
+    (lib.mkIf (options ? home-manager) {
+      home-manager.sharedModules = [self.homeModules.helium];
+    })
+    (lib.mkIf (enabledUsers != {}) {
+      environment.etc = policyFiles;
+    })
+  ];
 }
