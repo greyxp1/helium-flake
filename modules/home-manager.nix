@@ -1,22 +1,13 @@
 {self}: {config, lib, pkgs, ...}: let
   cfg = config.programs.helium;
-
   configDir = "${config.xdg.configHome}/net.imput.helium/";
-
-  heliumWithFlags = pkgs.symlinkJoin {
-    name = "helium-configured";
-    paths = [cfg.package];
-    nativeBuildInputs = [pkgs.makeWrapper];
-    postBuild = ''
-      wrapProgram $out/bin/helium \
-        ${lib.concatMapStringsSep " \\\n        " (f: "--add-flags ${lib.escapeShellArg f}") (
-        [
-          "--allow-file-access-from-files"
-        ]
-        ++ ["--enable-features=NativeNotifications,SystemNotifications"]
-        ++ cfg.extraFlags
-      )}
-    '';
+  helium = cfg.package.override {
+    flags =
+      [
+        "--allow-file-access-from-files"
+        "--enable-features=NativeNotifications,SystemNotifications"
+      ]
+      ++ cfg.extraFlags;
   };
 in {
   options.programs.helium = {
@@ -74,7 +65,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     home = {
-      packages = [heliumWithFlags];
+      packages = [helium];
       activation = lib.mkIf (cfg.preferences != {}) {
         heliumPreferences = lib.hm.dag.entryAfter ["writeBoundary"] ''
           prefs_dir="${configDir}/Default"
@@ -117,7 +108,7 @@ in {
       };
       desktopEntries.helium = lib.mkIf cfg.defaultBrowser {
         name = "Helium";
-        exec = "${heliumWithFlags}/bin/helium %U";
+        exec = "${helium}/bin/helium %U";
         icon = "helium";
         terminal = false;
         categories = [

@@ -12,6 +12,14 @@
         mode = "0644";
       }
   )
+  enabledUsers
+  // lib.mapAttrs' (
+    name: user:
+      lib.nameValuePair "helium/policies/managed/helium-${name}.json" {
+        text = user.programs.helium.finalPolicyJson;
+        mode = "0644";
+      }
+  )
   enabledUsers;
 in {
   config = lib.mkIf (enabledUsers != {}) {

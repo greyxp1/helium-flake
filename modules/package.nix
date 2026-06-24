@@ -51,6 +51,7 @@
   wayland,
   version,
   src,
+  flags ? [],
 }: let
   # Chromium flags applied to disable update machinery.
   commonFlags = [
@@ -150,7 +151,7 @@ in
         --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath linuxRuntimeLibs}" \
         --add-flags "--ozone-platform-hint=auto" \
         --add-flags "--enable-features=WaylandWindowDecorations" \
-        ${addFlags commonFlags}
+        ${addFlags (commonFlags ++ flags)}
 
       mkdir -p $out/share/icons/hicolor/256x256/apps
       cp $out/opt/helium/product_logo_256.png \
