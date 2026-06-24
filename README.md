@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > This flake only supports `x86_64-linux`.
 >
-> This was forked from: https://gitlab.com/AlexLov/helium-flake
+> This was forked from [helium-flake](https://gitlab.com/AlexLov/helium-flake).
 > Without it I'd have had to write the packaging myself, so all credit to them.
 
 ## About
