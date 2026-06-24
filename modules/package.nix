@@ -159,13 +159,6 @@ in
       runHook postInstall
     '';
 
-    # Helper utility for getting extensions
-    postInstall = ''
-      mkdir -p $out/bin
-      cp ${../scripts/prefetch-nix-extension.sh} $out/bin/prefetch-nix
-      chmod +x $out/bin/prefetch-nix
-    '';
-
     desktopItems = [
       (makeDesktopItem {
         name = "helium";

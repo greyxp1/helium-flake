@@ -3,46 +3,6 @@
 
   configDir = "${config.xdg.configHome}/net.imput.helium/";
 
-  fetchExtension = {id, hash}: let
-    chromiumVersion = "148.0.0.0";
-  in
-    pkgs.fetchurl {
-      name = "${id}.crx";
-      url = "https://clients2.google.com/service/update2/crx?response=redirect&os=linux&arch=x64&os_arch=x86_64&nacl_arch=x86-64&prod=chromiumcrx&prodchannel=stable&prodversion=${chromiumVersion}&acceptformat=crx3&x=id%3D${id}%26installsource%3Dondemand%26uc";
-      inherit hash;
-    };
-
-  unpackExtension = {id, hash}:
-    pkgs.runCommand "helium-ext-${id}"
-    {
-      nativeBuildInputs = [pkgs.unzip];
-      src = fetchExtension {inherit id hash;};
-    }
-    ''
-      mkdir -p $out
-      unzip -q $src -d $out
-
-      if [ ! -f "$out/manifest.json" ]; then
-        echo "Extension ${id} did not unpack to a valid Chromium extension." >&2
-        echo "Check the extension ID, hash, or Chrome Web Store rate limiting." >&2
-        exit 1
-      fi
-
-      # Remove the system-reserved metadata folder that causes the load error
-      rm -rf $out/_metadata
-    '';
-
-  # We add the IDs to the Allowlist policy so Helium doesn't disable them for being "unverified"
-  policyAttrs = {
-    ExtensionInstallAllowlist = map (ext: ext.id) cfg.extensions;
-  }
-  // cfg.extraPolicies;
-
-  loadExtensionFlag =
-    if cfg.extensions != []
-    then ["--load-extension=${lib.concatMapStringsSep "," (ext: "${unpackExtension ext}") cfg.extensions}"]
-    else [];
-
   heliumWithFlags = pkgs.symlinkJoin {
     name = "helium-configured";
     paths = [cfg.package];
@@ -53,7 +13,6 @@
         [
           "--allow-file-access-from-files"
         ]
-        ++ loadExtensionFlag
         ++ ["--enable-features=NativeNotifications,SystemNotifications"]
         ++ cfg.extraFlags
       )}
@@ -65,17 +24,6 @@ in {
     package = lib.mkOption {
       type = lib.types.package;
       default = self.packages.${pkgs.stdenv.hostPlatform.system}.helium;
-    };
-    extensions = lib.mkOption {
-      type = lib.types.listOf (
-        lib.types.submodule {
-          options = {
-            id = lib.mkOption {type = lib.types.str;};
-            hash = lib.mkOption {type = lib.types.str;};
-          };
-        }
-      );
-      default = [];
     };
     extraFlags = lib.mkOption {
       type = lib.types.listOf lib.types.str;
@@ -105,7 +53,7 @@ in {
     finalPolicyJson = lib.mkOption {
       type = lib.types.str;
       internal = true;
-      default = builtins.toJSON policyAttrs;
+      default = builtins.toJSON cfg.extraPolicies;
     };
 
     preferences = lib.mkOption {
