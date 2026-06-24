@@ -28,13 +28,9 @@ helium.url = "github:greyxp1/helium-flake";
 Each extension needs an `id`. Set `pin = true` to force-pin it to the toolbar.
 
 ```nix
-programs.helium.extensions = {
-  darkReader.id = "eimadpbcbfnmbkopoojfekhnkhdbieeh";
-
-  protonPass = {
-    id = "ghmbeldphafepmbegfdlkpapadhbakde";
-    pin = true;
-  };
+programs.helium.extensions.darkReader = {
+  id = "eimadpbcbfnmbkopoojfekhnkhdbieeh";
+  pin = true;
 };
 ```
 
