@@ -3,8 +3,8 @@
 > [!IMPORTANT]
 > I only test `x86_64-linux`
 >
-> This is inspired by: https://github.com/schembriaiden/helium-browser-nix-flake
-> Without it I wouldn't have known how to package the browser, so all credit to them.
+> This was forked from: https://gitlab.com/AlexLov/helium-flake
+> Without it I'd have had to write the packaging myself, so all credit to them.
 
 ## About
 
@@ -183,6 +183,7 @@ extensions = [
 ```
 
 ## Updating Helium
+
 There is a Gitlab CI Pipeline which fetches from the upstream everyday at 20:00 UTC+2
 
 ## Flake outputs
