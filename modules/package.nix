@@ -166,10 +166,7 @@ in
         icon = "helium";
         desktopName = "Helium";
         genericName = "Web Browser";
-        categories = [
-          "Network"
-          "WebBrowser"
-        ];
+        categories = ["Network" "WebBrowser"];
         terminal = false;
         mimeTypes = [
           "text/html"
@@ -185,9 +182,7 @@ in
       description = "Private, fast, and honest web browser based on ungoogled-chromium";
       homepage = "https://helium.computer/";
       license = lib.licenses.gpl3Only;
-      platforms = [
-        "x86_64-linux"
-      ];
+      platforms = ["x86_64-linux"];
       mainProgram = "helium";
     };
   }
