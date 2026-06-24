@@ -10,5 +10,5 @@ trap 'rm -f "$tmp"' EXIT
 sed \
   -e "s|version = \".*\";|version = \"$version\";|" \
   -e "s|hash = \".*\";|hash = \"$hash\";|" \
-  modules/sources.nix > "$tmp"
-mv "$tmp" modules/sources.nix
+  flake.nix > "$tmp"
+mv "$tmp" flake.nix
