@@ -1,68 +1,27 @@
 # helium-flake
 
-> [!IMPORTANT]
-> This flake only supports `x86_64-linux`.
->
-> This was forked from [helium-flake](https://gitlab.com/AlexLov/helium-flake).
-> Without it I'd have had to write the packaging myself, so all credit to them.
-
-## About
-
-Nix flake for the [Helium browser](https://helium.computer/) with a home-manager module for declarative extension and settings management.
+Forked from [helium-flake](https://gitlab.com/AlexLov/helium-flake). Credit goes to them.
 
 ## Quick start
-
-### `nix run`
 
 ```sh
 nix run github:greyxp1/helium-flake
 ```
 
-### NixOS + home-manager
+## Usage
 
 Add the flake to your inputs:
-
 ```nix
-# flake.nix
-{
-  inputs = {
-    nixpkgs.url      = "github:NixOS/nixpkgs/nixos-unstable";
-    home-manager.url = "github:nix-community/home-manager";
-    helium.url       = "github:greyxp1/helium-flake";
-  };
-
-  outputs = { nixpkgs, home-manager, helium, ... }: {
-    nixosConfigurations.mymachine = nixpkgs.lib.nixosSystem {
-      modules = [
-        home-manager.nixosModules.home-manager
-        helium.nixosModules.helium
-        {
-          home-manager.users.youruser = {
-            imports = [ helium.homeModules.helium ];
-            # see configuration below
-          };
-        }
-      ];
-    };
-  };
-}
+helium.url = "github:greyxp1/helium-flake";
 ```
 
 ## Configuration
-
-> [!IMPORTANT]
-> You need both the NixOS module and the Home Manager module for full configuration support.
-> Home Manager installs and wraps Helium, while the NixOS module writes managed policies to `/etc/chromium/policies/managed/`.
 
 ```nix
 { config, pkgs, helium, ... }:
 
 {
-  # 1. THE NIXOS BRIDGE
-  # This writes to /etc/chromium/policies/managed/
   imports = [helium.nixosModules.helium];
-
-  # 2. THE HOME MANAGER CONFIGURATION
   home-manager.users.${YOUR_USERNAME} = {
     imports = [helium.homeModules.helium];
 
@@ -75,7 +34,6 @@ Add the flake to your inputs:
         "--enable-features=HeliumMiddleClickAutoscroll"
       ];
 
-      # These get merged into the policy file in /etc
       extraPolicies = {
         ExtensionInstallForcelist = [
           "ghmbeldphafepmbegfdlkpapadhbakde" # Proton Pass
@@ -84,12 +42,11 @@ Add the flake to your inputs:
         ];
 
         ExtensionSettings = {
-          "ghmbeldphafepmbegfdlkpapadhbakde".toolbar_pin = "force_pinned";
-          "ldgfbffkinooeloadekpmfoklnobpien".toolbar_pin = "force_pinned";
+          "ghmbeldphafepmbegfdlkpapadhbakde".toolbar_pin = "force_pinned"; # Proton Pass
+          "ldgfbffkinooeloadekpmfoklnobpien".toolbar_pin = "force_pinned"; # Raindrop.io
         };
       };
 
-      # Preferences (Settings), look at the section below
       preferences = {
         browser.show_forward_button = false;
         helium.browser = {
@@ -150,15 +107,3 @@ These are usually what you imperatively choose in the `Settings` menu. You can f
   };
 }
 ```
-
-## Flake outputs
-
-| Output                       | Description                     |
-| ---------------------------- | ------------------------------- |
-| `packages.<system>.helium`   | Helium browser package          |
-| `apps.<system>.helium`       | `nix run` entry point           |
-| `homeModules.helium`         | home-manager module             |
-| `nixosModules.helium`        | nixos module                    |
-| `devShells.<system>.default` | Shell with Helium available     |
-| `checks.<system>.build`      | Build check (`nix flake check`) |
-| `checks.<system>.module`     | NixOS/Home Manager module check |
