@@ -18,7 +18,7 @@ helium.url = "github:greyxp1/helium-flake";
 - `defaultBrowser`: register Helium as the default browser for HTML, HTTP, and HTTPS.
 - `flags`: extra command-line flags from `helium://flags/` passed to Helium.
 - `preferences`: Chromium preference keys from `helium://prefs-internals/` merged into `~/.config/net.imput.helium/Default/Preferences`.
-- `extensions`: Chrome [Web Store](https://chromewebstore.google.com/) extensions to force-install.
+- `extensions`: Chrome Web Store extensions to force-install.
 - `extraPolicies`: Chromium policy values from `helium://policy/` written to managed policy files.
 - `nativeMessagingHosts`: native messaging host packages to expose to Helium.
 - `package`: override the Helium package used by the module.
