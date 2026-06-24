@@ -15,7 +15,7 @@ Nix flake for the [Helium browser](https://helium.computer/) with a home-manager
 ### `nix run`
 
 ```sh
-nix run github:ntgn/helium-flake
+nix run github:greyxp1/helium-flake
 ```
 
 ### NixOS + home-manager
@@ -28,7 +28,7 @@ Add the flake to your inputs:
   inputs = {
     nixpkgs.url      = "github:NixOS/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
-    helium.url       = "gitlab:ntgn/helium-flake";
+    helium.url       = "github:greyp1/helium-flake";
   };
 
   outputs = { nixpkgs, home-manager, helium, ... }: {
@@ -184,7 +184,7 @@ extensions = [
 
 ## Updating Helium
 
-There is a Gitlab CI Pipeline which fetches from the upstream everyday at 20:00 UTC+2
+~~There is a Gitlab CI Pipeline which fetches from the upstream everyday at 20:00 UTC+2~~
 
 ## Flake outputs
 
