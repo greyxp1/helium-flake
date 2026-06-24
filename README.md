@@ -4,7 +4,7 @@
 nix run github:greyxp1/helium-flake
 ```
 
-## Usage
+## Installation
 
 Add the flake to your inputs:
 
@@ -45,7 +45,7 @@ programs.helium.extensions = {
 
 {
   imports = [helium.nixosModules.helium];
-  home-manager.users.${YOUR_USERNAME} = {
+  home-manager.users.grey = {
     programs.helium = {
       enable = true;
       defaultBrowser = true;
