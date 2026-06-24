@@ -33,16 +33,18 @@ helium.url = "github:greyxp1/helium-flake";
         "--enable-features=HeliumMiddleClickAutoscroll"
       ];
 
-      extraPolicies = {
-        ExtensionInstallForcelist = [
-          "ghmbeldphafepmbegfdlkpapadhbakde" # Proton Pass
-          "ldgfbffkinooeloadekpmfoklnobpien" # Raindrop.io
-          "mnjggcdmjocbbbhaepdhchncahnbgone" # SponsorBlock
-        ];
+      extensions = {
+        darkReader.id = "eimadpbcbfnmbkopoojfekhnkhdbieeh";
+        sponsorBlock.id = "mnjggcdmjocbbbhaepdhchncahnbgone";
 
-        ExtensionSettings = {
-          "ghmbeldphafepmbegfdlkpapadhbakde".toolbar_pin = "force_pinned"; # Proton Pass
-          "ldgfbffkinooeloadekpmfoklnobpien".toolbar_pin = "force_pinned"; # Raindrop.io
+        protonPass = {
+          id = "ghmbeldphafepmbegfdlkpapadhbakde";
+          pin = true;
+        };
+
+        raindrop = {
+          id = "ldgfbffkinooeloadekpmfoklnobpien";
+          pin = true;
         };
       };
 
@@ -73,6 +75,7 @@ The following options are available under `programs.helium`:
 | `enable`               | boolean          | `false`                | Whether to enable the Helium browser module.        |
 | `package`              | package          | `self.packages.helium` | The helium package to use.                          |
 | `flags`                | list of strings  | `[]`                   | Command line arguments passed to the wrapper.       |
+| `extensions`           | attribute set    | `{}`                   | Chrome Web Store extension IDs, with optional pins. |
 | `extraPolicies`        | attribute set    | `{}`                   | Chromium policies written to managed policy files.  |
 | `preferences`          | attribute set    | `{}`                   | Browser settings merged into the default profile.   |
 | `defaultBrowser`       | boolean          | `false`                | Set Helium as the default browser in XDG mimeapps.  |

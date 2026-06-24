@@ -1,12 +1,24 @@
 {self}: {config, lib, pkgs, ...}: let
   cfg = config.programs.helium;
   configDir = "${config.xdg.configHome}/net.imput.helium/";
+  extensions = lib.attrValues cfg.extensions;
+  pinnedExtensions = lib.filter (extension: extension.pin) extensions;
+  extensionPolicies = lib.optionalAttrs (extensions != []) {
+    ExtensionInstallForcelist = map (extension: extension.id) extensions;
+  } // lib.optionalAttrs (pinnedExtensions != []) {
+    ExtensionSettings = builtins.listToAttrs (
+      map (extension: {
+        name = extension.id;
+        value.toolbar_pin = "force_pinned";
+      })
+      pinnedExtensions
+    );
+  };
   helium = cfg.package.override {
-    flags =
-      [
-        "--allow-file-access-from-files"
-      ]
-      ++ cfg.flags;
+    flags = [
+      "--allow-file-access-from-files"
+    ]
+    ++ cfg.flags;
   };
 in {
   options.programs.helium = {
@@ -18,6 +30,18 @@ in {
     flags = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [];
+    };
+    extensions = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.submodule {
+        options = {
+          id = lib.mkOption {type = lib.types.str;};
+          pin = lib.mkOption {
+            type = lib.types.bool;
+            default = false;
+          };
+        };
+      });
+      default = {};
     };
     extraPolicies = lib.mkOption {
       type = lib.types.attrsOf lib.types.anything;
@@ -43,7 +67,7 @@ in {
     finalPolicyJson = lib.mkOption {
       type = lib.types.str;
       internal = true;
-      default = builtins.toJSON cfg.extraPolicies;
+      default = builtins.toJSON (lib.recursiveUpdate extensionPolicies cfg.extraPolicies);
     };
 
     preferences = lib.mkOption {

@@ -55,6 +55,10 @@
                   programs.helium = {
                     enable = true;
                     defaultBrowser = true;
+                    extensions.test-extension = {
+                      id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+                      pin = true;
+                    };
                     extraPolicies.HomepageLocation = "https://helium.computer";
                     preferences.browser.show_home_button = true;
                   };
