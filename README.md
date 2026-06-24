@@ -91,6 +91,6 @@ programs.helium.extensions = {
 
 ## Credits
 
-- Most of the original flake, package, NixOS module, and Home Manager module code was written by [ntgn's helium-flake](https://gitlab.com/ntgn/helium-flake).
-- The `nativeMessagingHosts` support was added by [AlexLov's fork](https://gitlab.com/AlexLov/helium-flake).
+- Most of the original flake, package, NixOS module, and Home Manager module code is from [ntgn's helium-flake](https://gitlab.com/ntgn/helium-flake).
+- The `nativeMessagingHosts` support was added in [AlexLov's fork](https://gitlab.com/AlexLov/helium-flake).
 - This fork contains my changes on top of their work.
