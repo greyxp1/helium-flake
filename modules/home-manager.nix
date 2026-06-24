@@ -32,7 +32,13 @@
     }
     ''
       mkdir -p $out
-      unzip -q $src -d $out || true
+      unzip -q $src -d $out
+
+      if [ ! -f "$out/manifest.json" ]; then
+        echo "Extension ${id} did not unpack to a valid Chromium extension." >&2
+        echo "Check the extension ID, hash, or Chrome Web Store rate limiting." >&2
+        exit 1
+      fi
 
       # Remove the system-reserved metadata folder that causes the load error
       rm -rf $out/_metadata
