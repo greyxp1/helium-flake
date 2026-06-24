@@ -14,10 +14,10 @@ helium.url = "github:greyxp1/helium-flake";
 
 ## Options
 
-- `enable`: install and configure Helium.
-- `defaultBrowser`: register Helium as the default browser for HTML, HTTP, and HTTPS.
+- `enable`: install Helium.
+- `defaultBrowser`: register Helium as the default browser.
 - `flags`: extra command-line flags from `helium://flags/` passed to Helium.
-- `preferences`: Chromium preference keys from `helium://prefs-internals/` merged into `~/.config/net.imput.helium/Default/Preferences`.
+- `preferences`: options you'd configure in the `Settings` menu. A json list of all preferences can be found in `helium://prefs-internals/`.
 - `extensions`: Chrome Web Store extensions to force-install.
 - `extraPolicies`: Chromium policy values from `helium://policy/` written to managed policy files.
 - `nativeMessagingHosts`: native messaging host packages to expose to Helium.
@@ -57,16 +57,10 @@ programs.helium.extensions = {
       ];
 
       extensions = {
-        darkReader.id = "eimadpbcbfnmbkopoojfekhnkhdbieeh";
         sponsorBlock.id = "mnjggcdmjocbbbhaepdhchncahnbgone";
 
-        protonPass = {
-          id = "ghmbeldphafepmbegfdlkpapadhbakde";
-          pin = true;
-        };
-
-        raindrop = {
-          id = "ldgfbffkinooeloadekpmfoklnobpien";
+        darkReader = {
+          id = "eimadpbcbfnmbkopoojfekhnkhdbieeh";
           pin = true;
         };
       };
