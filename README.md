@@ -65,7 +65,7 @@ Add the flake to your inputs:
   # 2. THE HOME MANAGER CONFIGURATION
   home-manager.users.${YOUR_USERNAME} = {
     imports = [
-      helium.homeManagerModules.helium
+      helium.homeModules.helium
     ];
 
     programs.helium = {
