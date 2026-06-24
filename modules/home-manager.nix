@@ -4,23 +4,11 @@
   configDir = "${config.xdg.configHome}/net.imput.helium/";
 
   fetchExtension = {id, hash}: let
-    os =
-      if pkgs.stdenv.isDarwin
-      then "mac"
-      else "linux";
-    arch =
-      if pkgs.stdenv.isAarch64
-      then "arm64"
-      else "x64";
-    os_arch =
-      if pkgs.stdenv.isDarwin
-      then "arm64"
-      else "x86_64";
     chromiumVersion = "148.0.0.0";
   in
     pkgs.fetchurl {
       name = "${id}.crx";
-      url = "https://clients2.google.com/service/update2/crx?response=redirect&os=${os}&arch=${arch}&os_arch=${os_arch}&nacl_arch=x86-64&prod=chromiumcrx&prodchannel=stable&prodversion=${chromiumVersion}&acceptformat=crx3&x=id%3D${id}%26installsource%3Dondemand%26uc";
+      url = "https://clients2.google.com/service/update2/crx?response=redirect&os=linux&arch=x64&os_arch=x86_64&nacl_arch=x86-64&prod=chromiumcrx&prodchannel=stable&prodversion=${chromiumVersion}&acceptformat=crx3&x=id%3D${id}%26installsource%3Dondemand%26uc";
       inherit hash;
     };
 
@@ -44,12 +32,6 @@
       rm -rf $out/_metadata
     '';
 
-  resolvedExtensions = map (spec: {
-    inherit (spec) id;
-    unpacked = unpackExtension {inherit (spec) id hash;};
-  })
-  cfg.extensions;
-
   # We add the IDs to the Allowlist policy so Helium doesn't disable them for being "unverified"
   policyAttrs = {
     ExtensionInstallAllowlist = map (ext: ext.id) cfg.extensions;
@@ -57,8 +39,8 @@
   // cfg.extraPolicies;
 
   loadExtensionFlag =
-    if resolvedExtensions != []
-    then ["--load-extension=${lib.concatStringsSep "," (map (ext: "${ext.unpacked}") resolvedExtensions)}"]
+    if cfg.extensions != []
+    then ["--load-extension=${lib.concatMapStringsSep "," (ext: "${unpackExtension ext}") cfg.extensions}"]
     else [];
 
   heliumWithFlags = pkgs.symlinkJoin {
@@ -69,14 +51,10 @@
       wrapProgram $out/bin/helium \
         ${lib.concatMapStringsSep " \\\n        " (f: "--add-flags ${lib.escapeShellArg f}") (
         [
-          "--disable-component-update"
           "--allow-file-access-from-files"
         ]
         ++ loadExtensionFlag
-        ++ lib.optionals pkgs.stdenv.isLinux [
-          "--ozone-platform-hint=auto"
-          "--enable-features=WaylandWindowDecorations,NativeNotifications,SystemNotifications"
-        ]
+        ++ ["--enable-features=NativeNotifications,SystemNotifications"]
         ++ cfg.extraFlags
       )}
     '';
@@ -148,24 +126,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     home = {
-      packages = [
-        heliumWithFlags
-        pkgs.jq
-        pkgs.coreutils
-      ];
-
-      file = let
-        nativeMessagingHostsJoined = pkgs.symlinkJoin {
-          name = "helium-native-messaging-hosts";
-          paths = cfg.nativeMessagingHosts;
-        };
-      in {
-        "${configDir}/NativeMessagingHosts" = lib.mkIf (cfg.nativeMessagingHosts != []) {
-          source = "${nativeMessagingHostsJoined}/etc/chromium/native-messaging-hosts";
-          recursive = true;
-        };
-      };
-
+      packages = [heliumWithFlags];
       activation = lib.mkIf (cfg.preferences != {}) {
         heliumPreferences = lib.hm.dag.entryAfter ["writeBoundary"] ''
           prefs_dir="${configDir}/Default"
@@ -186,28 +147,41 @@ in {
       };
     };
 
-    xdg.mimeApps = lib.mkIf cfg.defaultBrowser {
-      enable = true;
-      defaultApplications = {
-        "text/html" = "helium.desktop";
-        "x-scheme-handler/http" = "helium.desktop";
-        "x-scheme-handler/https" = "helium.desktop";
+    xdg = {
+      configFile = lib.mkIf (cfg.nativeMessagingHosts != []) (let
+        nativeMessagingHostsJoined = pkgs.symlinkJoin {
+          name = "helium-native-messaging-hosts";
+          paths = cfg.nativeMessagingHosts;
+        };
+      in {
+        "net.imput.helium/NativeMessagingHosts" = {
+          source = "${nativeMessagingHostsJoined}/etc/chromium/native-messaging-hosts";
+          recursive = true;
+        };
+      });
+      mimeApps = lib.mkIf cfg.defaultBrowser {
+        enable = true;
+        defaultApplications = {
+          "text/html" = "helium.desktop";
+          "x-scheme-handler/http" = "helium.desktop";
+          "x-scheme-handler/https" = "helium.desktop";
+        };
       };
-    };
-    xdg.desktopEntries.helium = lib.mkIf cfg.defaultBrowser {
-      name = "Helium";
-      exec = "${heliumWithFlags}/bin/helium %U";
-      icon = "helium";
-      terminal = false;
-      categories = [
-        "Network"
-        "WebBrowser"
-      ];
-      mimeType = [
-        "text/html"
-        "x-scheme-handler/http"
-        "x-scheme-handler/https"
-      ];
+      desktopEntries.helium = lib.mkIf cfg.defaultBrowser {
+        name = "Helium";
+        exec = "${heliumWithFlags}/bin/helium %U";
+        icon = "helium";
+        terminal = false;
+        categories = [
+          "Network"
+          "WebBrowser"
+        ];
+        mimeType = [
+          "text/html"
+          "x-scheme-handler/http"
+          "x-scheme-handler/https"
+        ];
+      };
     };
   };
 }

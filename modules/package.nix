@@ -5,7 +5,6 @@
   autoPatchelfHook,
   copyDesktopItems,
   makeDesktopItem,
-  _7zz,
   # Runtime/build deps
   alsa-lib,
   at-spi2-atk,
@@ -53,7 +52,7 @@
   version,
   src,
 }: let
-  # Chromium flags applied on all platforms to disable update machinery.
+  # Chromium flags applied to disable update machinery.
   commonFlags = [
     "--disable-component-update"
     "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'"
@@ -81,14 +80,11 @@ in
 
     nativeBuildInputs = [
       makeWrapper
-    ]
-    ++ lib.optionals stdenv.isLinux [
       autoPatchelfHook
       copyDesktopItems
-    ]
-    ++ lib.optionals stdenv.isDarwin [_7zz];
+    ];
 
-    buildInputs = lib.optionals stdenv.isLinux [
+    buildInputs = [
       alsa-lib
       at-spi2-atk
       at-spi2-core
@@ -133,7 +129,7 @@ in
     ];
 
     # Qt libraries are bundled; suppress autoPatchelf warnings for them.
-    autoPatchelfIgnoreMissingDeps = lib.optionals stdenv.isLinux [
+    autoPatchelfIgnoreMissingDeps = [
       "libQt6Core.so.6"
       "libQt6Gui.so.6"
       "libQt6Widgets.so.6"
@@ -142,42 +138,26 @@ in
       "libQt5Widgets.so.5"
     ];
 
-    dontWrapQtApps = stdenv.isLinux;
+    dontWrapQtApps = true;
 
-    unpackCmd = lib.optionalString stdenv.isDarwin "7zz x $src";
+    installPhase = ''
+      runHook preInstall
 
-    installPhase =
-      if stdenv.isDarwin
-      then ''
-        runHook preInstall
+      mkdir -p $out/bin $out/opt/helium
+      cp -r * $out/opt/helium
 
-        mkdir -p $out/Applications/Helium.app
-        cp -r . $out/Applications/Helium.app
+      makeWrapper $out/opt/helium/helium $out/bin/helium \
+        --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath linuxRuntimeLibs}" \
+        --add-flags "--ozone-platform-hint=auto" \
+        --add-flags "--enable-features=WaylandWindowDecorations" \
+        ${addFlags commonFlags}
 
-        mkdir -p $out/bin
-        makeWrapper $out/Applications/Helium.app/Contents/MacOS/Helium $out/bin/helium \
-          ${addFlags commonFlags}
+      mkdir -p $out/share/icons/hicolor/256x256/apps
+      cp $out/opt/helium/product_logo_256.png \
+        $out/share/icons/hicolor/256x256/apps/helium.png
 
-        runHook postInstall
-      ''
-      else ''
-        runHook preInstall
-
-        mkdir -p $out/bin $out/opt/helium
-        cp -r * $out/opt/helium
-
-        makeWrapper $out/opt/helium/helium $out/bin/helium \
-          --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath linuxRuntimeLibs}" \
-          --add-flags "--ozone-platform-hint=auto" \
-          --add-flags "--enable-features=WaylandWindowDecorations" \
-          ${addFlags commonFlags}
-
-        mkdir -p $out/share/icons/hicolor/256x256/apps
-        cp $out/opt/helium/product_logo_256.png \
-          $out/share/icons/hicolor/256x256/apps/helium.png
-
-        runHook postInstall
-      '';
+      runHook postInstall
+    '';
 
     # Helper utility for getting extensions
     postInstall = ''
@@ -186,7 +166,7 @@ in
       chmod +x $out/bin/prefetch-nix
     '';
 
-    desktopItems = lib.optionals stdenv.isLinux [
+    desktopItems = [
       (makeDesktopItem {
         name = "helium";
         exec = "helium %U";
@@ -214,9 +194,6 @@ in
       license = lib.licenses.gpl3Only;
       platforms = [
         "x86_64-linux"
-        "aarch64-linux"
-        "x86_64-darwin"
-        "aarch64-darwin"
       ];
       mainProgram = "helium";
     };

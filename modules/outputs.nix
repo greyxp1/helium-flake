@@ -1,30 +1,14 @@
 {inputs, self, ...}: {
-  perSystem = {lib, pkgs, system, ...}: let
+  perSystem = {pkgs, system, ...}: let
     sources = import ./sources.nix;
 
-    version =
-      if pkgs.stdenv.isDarwin
-      then sources.versions.darwin
-      else sources.versions.linux;
-
-    src = pkgs.fetchurl (
-      (sources.srcs.${system} or (throw "Unsupported system: ${system}")) sources.versions
-    );
-
+    inherit (sources) version;
+    src = pkgs.fetchurl (sources.src version);
     helium = pkgs.callPackage ./package.nix {inherit version src;};
 
     app = {
       type = "app";
       program = "${helium}/bin/helium";
-      meta = {
-        inherit
-          (helium.meta)
-          description
-          homepage
-          license
-          platforms
-          ;
-      };
     };
 
     moduleCheck = inputs.nixpkgs.lib.nixosSystem {
@@ -39,7 +23,6 @@
             fsType = "tmpfs";
           };
           system.stateVersion = "26.05";
-
           users.users.helium-test = {
             isNormalUser = true;
             home = "/home/helium-test";
@@ -50,6 +33,7 @@
             useUserPackages = true;
             users.helium-test = {
               imports = [self.homeModules.helium];
+              home.enableNixpkgsReleaseCheck = false;
               home.stateVersion = "26.05";
               programs.helium = {
                 enable = true;
@@ -74,7 +58,8 @@
     };
 
     devShells.default = pkgs.mkShell {packages = [helium pkgs.nix-update];};
-    checks = {build = helium;} // lib.optionalAttrs pkgs.stdenv.isLinux {
+    checks = {
+      build = helium;
       module = moduleCheck.config.system.build.toplevel;
     };
   };
