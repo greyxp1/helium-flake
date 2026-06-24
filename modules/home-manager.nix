@@ -1,48 +1,48 @@
-{ self }:
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}:
-let
+{self}: {config, lib, pkgs, ...}: let
   cfg = config.programs.helium;
 
   configDir = "${config.xdg.configHome}/net.imput.helium/";
 
-  fetchExtension =
-    { id, hash }:
-    let
-      os = if pkgs.stdenv.isDarwin then "mac" else "linux";
-      arch = if pkgs.stdenv.isAarch64 then "arm64" else "x64";
-      os_arch = if pkgs.stdenv.isDarwin then "arm64" else "x86_64";
-      chromiumVersion = "148.0.0.0";
-    in
+  fetchExtension = {id, hash}: let
+    os =
+      if pkgs.stdenv.isDarwin
+      then "mac"
+      else "linux";
+    arch =
+      if pkgs.stdenv.isAarch64
+      then "arm64"
+      else "x64";
+    os_arch =
+      if pkgs.stdenv.isDarwin
+      then "arm64"
+      else "x86_64";
+    chromiumVersion = "148.0.0.0";
+  in
     pkgs.fetchurl {
       name = "${id}.crx";
       url = "https://clients2.google.com/service/update2/crx?response=redirect&os=${os}&arch=${arch}&os_arch=${os_arch}&nacl_arch=x86-64&prod=chromiumcrx&prodchannel=stable&prodversion=${chromiumVersion}&acceptformat=crx3&x=id%3D${id}%26installsource%3Dondemand%26uc";
       inherit hash;
     };
 
-  unpackExtension =
-    { id, hash }:
+  unpackExtension = {id, hash}:
     pkgs.runCommand "helium-ext-${id}"
-      {
-        nativeBuildInputs = [ pkgs.unzip ];
-        src = fetchExtension { inherit id hash; };
-      }
-      ''
-        mkdir -p $out
-        unzip -q $src -d $out || true
+    {
+      nativeBuildInputs = [pkgs.unzip];
+      src = fetchExtension {inherit id hash;};
+    }
+    ''
+      mkdir -p $out
+      unzip -q $src -d $out || true
 
-        # Remove the system-reserved metadata folder that causes the load error
-        rm -rf $out/_metadata
-      '';
+      # Remove the system-reserved metadata folder that causes the load error
+      rm -rf $out/_metadata
+    '';
 
   resolvedExtensions = map (spec: {
     inherit (spec) id;
-    unpacked = unpackExtension { inherit (spec) id hash; };
-  }) cfg.extensions;
+    unpacked = unpackExtension {inherit (spec) id hash;};
+  })
+  cfg.extensions;
 
   # We add the IDs to the Allowlist policy so Helium doesn't disable them for being "unverified"
   policyAttrs = {
@@ -51,34 +51,31 @@ let
   // cfg.extraPolicies;
 
   loadExtensionFlag =
-    if resolvedExtensions != [ ] then
-      [ "--load-extension=${lib.concatStringsSep "," (map (ext: "${ext.unpacked}") resolvedExtensions)}" ]
-    else
-      [ ];
+    if resolvedExtensions != []
+    then ["--load-extension=${lib.concatStringsSep "," (map (ext: "${ext.unpacked}") resolvedExtensions)}"]
+    else [];
 
   heliumWithFlags = pkgs.symlinkJoin {
     name = "helium-configured";
-    paths = [ cfg.package ];
-    nativeBuildInputs = [ pkgs.makeWrapper ];
+    paths = [cfg.package];
+    nativeBuildInputs = [pkgs.makeWrapper];
     postBuild = ''
       wrapProgram $out/bin/helium \
         ${lib.concatMapStringsSep " \\\n        " (f: "--add-flags ${lib.escapeShellArg f}") (
-          [
-            "--disable-component-update"
-            "--allow-file-access-from-files"
-          ]
-          ++ loadExtensionFlag
-          ++ lib.optionals pkgs.stdenv.isLinux [
-            "--ozone-platform-hint=auto"
-            "--enable-features=WaylandWindowDecorations,NativeNotifications,SystemNotifications"
-          ]
-          ++ cfg.extraFlags
-        )}
+        [
+          "--disable-component-update"
+          "--allow-file-access-from-files"
+        ]
+        ++ loadExtensionFlag
+        ++ lib.optionals pkgs.stdenv.isLinux [
+          "--ozone-platform-hint=auto"
+          "--enable-features=WaylandWindowDecorations,NativeNotifications,SystemNotifications"
+        ]
+        ++ cfg.extraFlags
+      )}
     '';
   };
-
-in
-{
+in {
   options.programs.helium = {
     enable = lib.mkEnableOption "Helium browser";
     package = lib.mkOption {
@@ -89,20 +86,20 @@ in
       type = lib.types.listOf (
         lib.types.submodule {
           options = {
-            id = lib.mkOption { type = lib.types.str; };
-            hash = lib.mkOption { type = lib.types.str; };
+            id = lib.mkOption {type = lib.types.str;};
+            hash = lib.mkOption {type = lib.types.str;};
           };
         }
       );
-      default = [ ];
+      default = [];
     };
     extraFlags = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ ];
+      default = [];
     };
     extraPolicies = lib.mkOption {
       type = lib.types.attrsOf lib.types.anything;
-      default = { };
+      default = {};
     };
     defaultBrowser = lib.mkOption {
       type = lib.types.bool;
@@ -110,7 +107,7 @@ in
     };
     nativeMessagingHosts = lib.mkOption {
       type = lib.types.listOf lib.types.package;
-      default = [ ];
+      default = [];
       example = lib.literalExpression ''
         [
           pkgs.keepassxc
@@ -129,7 +126,7 @@ in
 
     preferences = lib.mkOption {
       type = lib.types.attrsOf lib.types.anything;
-      default = { };
+      default = {};
       description = ''
         Chromium preferences to set in the Default profile.
         These are merged into ~/.config/net.imput.helium/Default/Preferences.
@@ -157,14 +154,14 @@ in
           paths = cfg.nativeMessagingHosts;
         };
       in {
-        "${configDir}/NativeMessagingHosts" = lib.mkIf (cfg.nativeMessagingHosts != [ ]) {
+        "${configDir}/NativeMessagingHosts" = lib.mkIf (cfg.nativeMessagingHosts != []) {
           source = "${nativeMessagingHostsJoined}/etc/chromium/native-messaging-hosts";
           recursive = true;
         };
       };
 
-      activation = lib.mkIf (cfg.preferences != { }) {
-        heliumPreferences = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      activation = lib.mkIf (cfg.preferences != {}) {
+        heliumPreferences = lib.hm.dag.entryAfter ["writeBoundary"] ''
           prefs_dir="${configDir}/Default"
           prefs_file="$prefs_dir/Preferences"
           nix_prefs='${builtins.toJSON cfg.preferences}'

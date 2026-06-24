@@ -52,8 +52,7 @@
   wayland,
   version,
   src,
-}:
-let
+}: let
   # Chromium flags applied on all platforms to disable update machinery.
   commonFlags = [
     "--disable-component-update"
@@ -76,80 +75,80 @@ let
     libpulseaudio
   ];
 in
-stdenv.mkDerivation {
-  pname = "helium";
-  inherit version src;
+  stdenv.mkDerivation {
+    pname = "helium";
+    inherit version src;
 
-  nativeBuildInputs = [
-    makeWrapper
-  ]
-  ++ lib.optionals stdenv.isLinux [
-    autoPatchelfHook
-    copyDesktopItems
-  ]
-  ++ lib.optionals stdenv.isDarwin [ _7zz ];
+    nativeBuildInputs = [
+      makeWrapper
+    ]
+    ++ lib.optionals stdenv.isLinux [
+      autoPatchelfHook
+      copyDesktopItems
+    ]
+    ++ lib.optionals stdenv.isDarwin [_7zz];
 
-  buildInputs = lib.optionals stdenv.isLinux [
-    alsa-lib
-    at-spi2-atk
-    at-spi2-core
-    atk
-    cairo
-    cups
-    dbus
-    expat
-    fontconfig
-    freetype
-    gdk-pixbuf
-    glib
-    gtk3
-    libdrm
-    libgbm
-    libGL
-    libpulseaudio
-    libx11
-    libxcb
-    libxcomposite
-    libxcursor
-    libxdamage
-    libxext
-    libxfixes
-    libxi
-    libxkbcommon
-    libxrandr
-    libxrender
-    libxscrnsaver
-    libxshmfence
-    libxtst
-    libuuid
-    mesa
-    nspr
-    nss
-    pango
-    pipewire
-    systemd
-    vulkan-loader
-    wayland
-    kdePackages.qtbase
-  ];
+    buildInputs = lib.optionals stdenv.isLinux [
+      alsa-lib
+      at-spi2-atk
+      at-spi2-core
+      atk
+      cairo
+      cups
+      dbus
+      expat
+      fontconfig
+      freetype
+      gdk-pixbuf
+      glib
+      gtk3
+      libdrm
+      libgbm
+      libGL
+      libpulseaudio
+      libx11
+      libxcb
+      libxcomposite
+      libxcursor
+      libxdamage
+      libxext
+      libxfixes
+      libxi
+      libxkbcommon
+      libxrandr
+      libxrender
+      libxscrnsaver
+      libxshmfence
+      libxtst
+      libuuid
+      mesa
+      nspr
+      nss
+      pango
+      pipewire
+      systemd
+      vulkan-loader
+      wayland
+      kdePackages.qtbase
+    ];
 
-  # Qt libraries are bundled; suppress autoPatchelf warnings for them.
-  autoPatchelfIgnoreMissingDeps = lib.optionals stdenv.isLinux [
-    "libQt6Core.so.6"
-    "libQt6Gui.so.6"
-    "libQt6Widgets.so.6"
-    "libQt5Core.so.5"
-    "libQt5Gui.so.5"
-    "libQt5Widgets.so.5"
-  ];
+    # Qt libraries are bundled; suppress autoPatchelf warnings for them.
+    autoPatchelfIgnoreMissingDeps = lib.optionals stdenv.isLinux [
+      "libQt6Core.so.6"
+      "libQt6Gui.so.6"
+      "libQt6Widgets.so.6"
+      "libQt5Core.so.5"
+      "libQt5Gui.so.5"
+      "libQt5Widgets.so.5"
+    ];
 
-  dontWrapQtApps = stdenv.isLinux;
+    dontWrapQtApps = stdenv.isLinux;
 
-  unpackCmd = lib.optionalString stdenv.isDarwin "7zz x $src";
+    unpackCmd = lib.optionalString stdenv.isDarwin "7zz x $src";
 
-  installPhase =
-    if stdenv.isDarwin then
-      ''
+    installPhase =
+      if stdenv.isDarwin
+      then ''
         runHook preInstall
 
         mkdir -p $out/Applications/Helium.app
@@ -161,8 +160,7 @@ stdenv.mkDerivation {
 
         runHook postInstall
       ''
-    else
-      ''
+      else ''
         runHook preInstall
 
         mkdir -p $out/bin $out/opt/helium
@@ -181,45 +179,45 @@ stdenv.mkDerivation {
         runHook postInstall
       '';
 
-  # Helper utility for getting extensions
-  postInstall = ''
-    mkdir -p $out/bin
-    cp ${../scripts/prefetch-nix-extension.sh} $out/bin/prefetch-nix
-    chmod +x $out/bin/prefetch-nix
-  '';
+    # Helper utility for getting extensions
+    postInstall = ''
+      mkdir -p $out/bin
+      cp ${../scripts/prefetch-nix-extension.sh} $out/bin/prefetch-nix
+      chmod +x $out/bin/prefetch-nix
+    '';
 
-  desktopItems = lib.optionals stdenv.isLinux [
-    (makeDesktopItem {
-      name = "helium";
-      exec = "helium %U";
-      icon = "helium";
-      desktopName = "Helium";
-      genericName = "Web Browser";
-      categories = [
-        "Network"
-        "WebBrowser"
-      ];
-      terminal = false;
-      mimeTypes = [
-        "text/html"
-        "text/xml"
-        "application/xhtml+xml"
-        "x-scheme-handler/http"
-        "x-scheme-handler/https"
-      ];
-    })
-  ];
-
-  meta = {
-    description = "Private, fast, and honest web browser based on ungoogled-chromium";
-    homepage = "https://helium.computer/";
-    license = lib.licenses.gpl3Only;
-    platforms = [
-      "x86_64-linux"
-      "aarch64-linux"
-      "x86_64-darwin"
-      "aarch64-darwin"
+    desktopItems = lib.optionals stdenv.isLinux [
+      (makeDesktopItem {
+        name = "helium";
+        exec = "helium %U";
+        icon = "helium";
+        desktopName = "Helium";
+        genericName = "Web Browser";
+        categories = [
+          "Network"
+          "WebBrowser"
+        ];
+        terminal = false;
+        mimeTypes = [
+          "text/html"
+          "text/xml"
+          "application/xhtml+xml"
+          "x-scheme-handler/http"
+          "x-scheme-handler/https"
+        ];
+      })
     ];
-    mainProgram = "helium";
-  };
-}
+
+    meta = {
+      description = "Private, fast, and honest web browser based on ungoogled-chromium";
+      homepage = "https://helium.computer/";
+      license = lib.licenses.gpl3Only;
+      platforms = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
+      mainProgram = "helium";
+    };
+  }
