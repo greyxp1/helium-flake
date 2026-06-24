@@ -28,7 +28,7 @@ Add the flake to your inputs:
   inputs = {
     nixpkgs.url      = "github:NixOS/nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
-    helium.url       = "github:greyp1/helium-flake";
+    helium.url       = "github:greyxp1/helium-flake";
   };
 
   outputs = { nixpkgs, home-manager, helium, ... }: {
@@ -50,7 +50,8 @@ Add the flake to your inputs:
 ## Configuration
 
 > [!IMPORTANT]
-> YOUT NEED BOTH THE NIXOS MODULE AND THE HOME-MANAGER MODULE FOR THE CONFIGURATION TO WORK CORRECTLY, BECAUSE THE CONFIGURATION IS WRITTEN IN `/etc/chromium/policies/managed/`
+> You need both the NixOS module and the Home Manager module for full configuration support.
+> Home Manager installs and wraps Helium, while the NixOS module writes managed policies to `/etc/chromium/policies/managed/`.
 
 ```nix
 { config, pkgs, helium, ... }:
@@ -161,7 +162,7 @@ These are usually what you imperatively choose in the `Settings` menu. You can f
 > [!WARNING]
 > Be wary that if you are rate-limited that the file will be empty and the build will fail
 
-Use the provided binary `prefetch-nix-extension` to obtain the nix code you need.
+Use the provided `prefetch-nix` binary to obtain the Nix code you need.
 
 You can copy the IDs from the URL in the chrome web store:
 
@@ -173,7 +174,7 @@ https://chromewebstore.google.com/detail/bitwarden-password-manage/nngceckbapebf
 Example Usage:
 
 ```console
-./prefetch-nix-extension.sh nngceckbapebfimnlniiiahkandclblb cjpalhdlnbpafiamejdnhcphjbkeiagm
+prefetch-nix nngceckbapebfimnlniiiahkandclblb cjpalhdlnbpafiamejdnhcphjbkeiagm
 
 # OUTPUT:
 extensions = [
@@ -181,10 +182,6 @@ extensions = [
   { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; hash = "sha256-FIbmYVj8cmXce7Vq4h7d2nOjmk4RkCnABmC4y5NDyGk="; }
 ];
 ```
-
-## Updating Helium
-
-~~There is a Gitlab CI Pipeline which fetches from the upstream everyday at 20:00 UTC+2~~
 
 ## Flake outputs
 
@@ -195,5 +192,5 @@ extensions = [
 | `homeModules.helium`         | home-manager module             |
 | `nixosModules.helium`        | nixos module                    |
 | `devShells.<system>.default` | Shell with Helium available     |
-| `formatter.<system>`         | `nixfmt-tree` (`nix fmt`)       |
 | `checks.<system>.build`      | Build check (`nix flake check`) |
+| `checks.<system>.module`     | NixOS/Home Manager module check |
