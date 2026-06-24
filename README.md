@@ -58,23 +58,20 @@ Add the flake to your inputs:
 { config, pkgs, helium, ... }:
 
 {
-  imports = [
-    # 1. THE NIXOS BRIDGE
-    # This writes to /etc/chromium/policies/managed/
-    helium.nixosModules.helium
-  ];
+  # 1. THE NIXOS BRIDGE
+  # This writes to /etc/chromium/policies/managed/
+  imports = [helium.nixosModules.helium];
 
   # 2. THE HOME MANAGER CONFIGURATION
   home-manager.users.${YOUR_USERNAME} = {
-    imports = [
-      helium.homeModules.helium
-    ];
+    imports = [helium.homeModules.helium];
 
     programs.helium = {
       enable = true;
       defaultBrowser = true;
 
       flags = [
+        "--ozone-platform-hint=auto"
         "--enable-features=HeliumMiddleClickAutoscroll"
       ];
 
@@ -115,15 +112,15 @@ Add the flake to your inputs:
 
 The following options are available under `programs.helium`:
 
-| Option                 | Type               | Default                | Description                                        |
-| :--------------------- | :----------------- | :--------------------- | :------------------------------------------------- |
-| `enable`               | boolean            | `false`                | Whether to enable the Helium browser module.       |
-| `package`              | package            | `self.packages.helium` | The helium package to use.                         |
-| `flags`                | list of strings    | `[]`                   | Command line arguments passed to the wrapper.      |
-| `extraPolicies`        | attribute set      | `{}`                   | Raw Chromium policies to apply.                    |
-| `preferences`          | attribute set      | `{}`                   | Json that will be merged into XDG Config.          |
-| `defaultBrowser`       | boolean            | `false`                | Set Helium as the default browser in XDG mimeapps. |
-| `nativeMessagingHosts` | list of packages   | `[]`                   | Native messaging host packages to expose to Helium. |
+| Option                 | Type             | Default                | Description                                         |
+| :--------------------- | :--------------- | :--------------------- | :-------------------------------------------------- |
+| `enable`               | boolean          | `false`                | Whether to enable the Helium browser module.        |
+| `package`              | package          | `self.packages.helium` | The helium package to use.                          |
+| `flags`                | list of strings  | `[]`                   | Command line arguments passed to the wrapper.       |
+| `extraPolicies`        | attribute set    | `{}`                   | Raw Chromium policies to apply.                     |
+| `preferences`          | attribute set    | `{}`                   | Json that will be merged into XDG Config.           |
+| `defaultBrowser`       | boolean          | `false`                | Set Helium as the default browser in XDG mimeapps.  |
+| `nativeMessagingHosts` | list of packages | `[]`                   | Native messaging host packages to expose to Helium. |
 
 ## Policies
 
@@ -143,13 +140,13 @@ These are usually what you imperatively choose in the `Settings` menu. You can f
 {
   programs.helium.preferences = {
     browser.show_home_button = false;
+    helium.browser.layout = 1;
     bookmark_bar = {
       show_apps_shortcut = false;
       show_managed_bookmarks = false;
       show_on_all_tabs = false;
       show_tab_groups = false;
     };
-    helium.browser.layout = 1;
   };
 }
 ```
