@@ -35,6 +35,7 @@ Add the flake to your inputs:
     nixosConfigurations.mymachine = nixpkgs.lib.nixosSystem {
       modules = [
         home-manager.nixosModules.home-manager
+        helium.nixosModules.helium
         {
           home-manager.users.youruser = {
             imports = [ helium.homeModules.helium ];
@@ -73,41 +74,38 @@ Add the flake to your inputs:
       enable = true;
       defaultBrowser = true;
 
-      extensions =  [
-        # Example of a manual extension (React DevTools)
-        # Look below, how to easily get these
-        {
-          id = "fmkadmapgofadopljbjfkapdkoienihi";
-          hash = "sha256-mH9Fv78p6x6k7E0S9eYt+F7D1m/1K0K8j6hP1z9oUoY=";
-        }
-      ];
-
       # These flags get added to the wrapper
       extraFlags = [
-        "--force-dark-mode"
-        "--incognito"
+        "--enable-features=HeliumMiddleClickAutoscroll"
       ];
 
       # These get merged into the policy file in /etc
       extraPolicies = {
-        HomepageLocation = "https://start.duckduckgo.com";
-        PasswordManagerEnabled = false;
-        DeveloperToolsAvailability = 1; # Ensures 'Inspect Element' works
-        ManagedBookmarks = [
-          {
-            toplevel_name = "Nix Ecosystem";
-          }
-          {
-            url = "https://search.nixos.org/packages";
-            name = "Nix Packages";
-          }
+        ExtensionInstallForcelist = [
+          "ghmbeldphafepmbegfdlkpapadhbakde" # Proton Pass
+          "ldgfbffkinooeloadekpmfoklnobpien" # Raindrop.io
+          "mnjggcdmjocbbbhaepdhchncahnbgone" # SponsorBlock
         ];
+
+        ExtensionSettings = {
+          "ghmbeldphafepmbegfdlkpapadhbakde".toolbar_pin = "force_pinned";
+          "ldgfbffkinooeloadekpmfoklnobpien".toolbar_pin = "force_pinned";
+        };
       };
 
       # Preferences (Settings), look at the section below
       preferences = {
-        browser.show_home_button = true;
-        bookmark_bar.show_on_all_tabs = true;
+        browser.show_forward_button = false;
+        helium.browser = {
+          layout = 2;
+          show_avatar_button = false;
+          show_back_button = false;
+          show_reload_button = false;
+          show_vertical_tabs_collapse_button = false;
+          zen_mode = true;
+          zen_mode_sidebar_pinned = true;
+          zen_mode_top_chrome_pinned = true;
+        };
       };
     };
   };
@@ -118,15 +116,15 @@ Add the flake to your inputs:
 
 The following options are available under `programs.helium`:
 
-| Option           | Type               | Default                | Description                                        |
-| :--------------- | :----------------- | :--------------------- | :------------------------------------------------- |
-| `enable`         | boolean            | `false`                | Whether to enable the Helium browser module.       |
-| `package`        | package            | `self.packages.helium` | The helium package to use.                         |
-| `extensions`     | list of submodules | `[]`                   | List of extensions to install `{ id, hash }`.      |
-| `extraFlags`     | list of strings    | `[]`                   | Command line arguments passed to the wrapper.      |
-| `extraPolicies`  | attribute set      | `{}`                   | Raw Chromium policies to apply.                    |
-| `preferences`    | attribute set      | `{}`                   | Json that will be merged into XDG Config.          |
-| `defaultBrowser` | boolean            | `false`                | Set Helium as the default browser in XDG mimeapps. |
+| Option                 | Type               | Default                | Description                                        |
+| :--------------------- | :----------------- | :--------------------- | :------------------------------------------------- |
+| `enable`               | boolean            | `false`                | Whether to enable the Helium browser module.       |
+| `package`              | package            | `self.packages.helium` | The helium package to use.                         |
+| `extraFlags`           | list of strings    | `[]`                   | Command line arguments passed to the wrapper.      |
+| `extraPolicies`        | attribute set      | `{}`                   | Raw Chromium policies to apply.                    |
+| `preferences`          | attribute set      | `{}`                   | Json that will be merged into XDG Config.          |
+| `defaultBrowser`       | boolean            | `false`                | Set Helium as the default browser in XDG mimeapps. |
+| `nativeMessagingHosts` | list of packages   | `[]`                   | Native messaging host packages to expose to Helium. |
 
 ## Policies
 
@@ -155,32 +153,6 @@ These are usually what you imperatively choose in the `Settings` menu. You can f
     helium.browser.layout = 1;
   };
 }
-```
-
-## Obtaining extensions
-
-> [!WARNING]
-> Be wary that if you are rate-limited that the file will be empty and the build will fail
-
-Use the provided `prefetch-nix` binary to obtain the Nix code you need.
-
-You can copy the IDs from the URL in the chrome web store:
-
-```ascii
-https://chromewebstore.google.com/detail/bitwarden-password-manage/nngceckbapebfimnlniiiahkandclblb
-                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ THIS PART
-```
-
-Example Usage:
-
-```console
-prefetch-nix nngceckbapebfimnlniiiahkandclblb cjpalhdlnbpafiamejdnhcphjbkeiagm
-
-# OUTPUT:
-extensions = [
-  { id = "nngceckbapebfimnlniiiahkandclblb"; hash = "sha256-XOVs2Tvay8hQ13SHz+728BDu2mMyQ0JxUuUI6FZ1NaM="; }
-  { id = "cjpalhdlnbpafiamejdnhcphjbkeiagm"; hash = "sha256-FIbmYVj8cmXce7Vq4h7d2nOjmk4RkCnABmC4y5NDyGk="; }
-];
 ```
 
 ## Flake outputs
