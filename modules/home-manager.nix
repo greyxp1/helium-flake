@@ -5,9 +5,8 @@
     flags =
       [
         "--allow-file-access-from-files"
-        "--enable-features=NativeNotifications,SystemNotifications"
       ]
-      ++ cfg.extraFlags;
+      ++ cfg.flags;
   };
 in {
   options.programs.helium = {
@@ -16,7 +15,7 @@ in {
       type = lib.types.package;
       default = self.packages.${pkgs.stdenv.hostPlatform.system}.helium;
     };
-    extraFlags = lib.mkOption {
+    flags = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [];
     };

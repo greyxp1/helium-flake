@@ -74,8 +74,7 @@ Add the flake to your inputs:
       enable = true;
       defaultBrowser = true;
 
-      # These flags get added to the wrapper
-      extraFlags = [
+      flags = [
         "--enable-features=HeliumMiddleClickAutoscroll"
       ];
 
@@ -120,7 +119,7 @@ The following options are available under `programs.helium`:
 | :--------------------- | :----------------- | :--------------------- | :------------------------------------------------- |
 | `enable`               | boolean            | `false`                | Whether to enable the Helium browser module.       |
 | `package`              | package            | `self.packages.helium` | The helium package to use.                         |
-| `extraFlags`           | list of strings    | `[]`                   | Command line arguments passed to the wrapper.      |
+| `flags`                | list of strings    | `[]`                   | Command line arguments passed to the wrapper.      |
 | `extraPolicies`        | attribute set      | `{}`                   | Raw Chromium policies to apply.                    |
 | `preferences`          | attribute set      | `{}`                   | Json that will be merged into XDG Config.          |
 | `defaultBrowser`       | boolean            | `false`                | Set Helium as the default browser in XDG mimeapps. |

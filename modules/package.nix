@@ -60,6 +60,7 @@
     "--check-for-update-interval=0"
     "--no-first-run"
     "--enable-features=StorageAccessAPI"
+    "--enable-features=NativeNotifications,SystemNotifications"
     "--restore-last-session"
   ];
 
