@@ -70,17 +70,13 @@ helium.url = "github:greyxp1/helium-flake";
 
 The following options are available under `programs.helium`:
 
-| Option                 | Type             | Default                | Description                                         |
-| :--------------------- | :--------------- | :--------------------- | :-------------------------------------------------- |
-| `enable`               | boolean          | `false`                | Whether to enable the Helium browser module.        |
-| `package`              | package          | `self.packages.helium` | The helium package to use.                          |
-| `flags`                | list of strings  | `[]`                   | Command line arguments passed to the wrapper.       |
-| `extensions`           | attribute set    | `{}`                   | Chrome Web Store extension IDs, with optional pins. |
-| `extraPolicies`        | attribute set    | `{}`                   | Chromium policies written to managed policy files.  |
-| `preferences`          | attribute set    | `{}`                   | Browser settings merged into the default profile.   |
-| `defaultBrowser`       | boolean          | `false`                | Set Helium as the default browser in XDG mimeapps.  |
-| `nativeMessagingHosts` | list of packages | `[]`                   | Native messaging host packages to expose to Helium. |
-
-`extraPolicies` accepts standard Chromium policy names. See the [Chrome Enterprise Policy List](https://chromeenterprise.google/policies/) for available keys.
-
-`preferences` uses the same keys Helium stores in the profile `Preferences` file. You can inspect them at `helium://prefs-internals/`.
+| Option                 | Type             | Default                | Description                                                                    |
+| :--------------------- | :--------------- | :--------------------- | :----------------------------------------------------------------------------- |
+| `enable`               | boolean          | `false`                | Whether to enable the Helium browser module.                                   |
+| `package`              | package          | `self.packages.helium` | The helium package to use.                                                     |
+| `flags`                | list of strings  | `[]`                   | Command line arguments passed to the wrapper.                                  |
+| `extensions`           | attribute set    | `{}`                   | Chrome Web Store extension IDs, with optional pins.                            |
+| `extraPolicies`        | attribute set    | `{}`                   | Chromium [policies](helium://policy/) written to managed policy files.         |
+| `preferences`          | attribute set    | `{}`                   | Browser [settings](helium://prefs-internals/) merged into the default profile. |
+| `defaultBrowser`       | boolean          | `false`                | Set Helium as the default browser in XDG mimeapps.                             |
+| `nativeMessagingHosts` | list of packages | `[]`                   | Native messaging host packages to expose to Helium.                            |
