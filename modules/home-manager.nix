@@ -14,19 +14,10 @@
       pinnedExtensions
     );
   };
-  helium = cfg.package.override {
-    flags = [
-      "--allow-file-access-from-files"
-    ]
-    ++ cfg.flags;
-  };
+  helium = self.packages.${pkgs.stdenv.hostPlatform.system}.helium.override {inherit (cfg) flags;};
 in {
   options.programs.helium = {
     enable = lib.mkEnableOption "Helium browser";
-    package = lib.mkOption {
-      type = lib.types.package;
-      default = self.packages.${pkgs.stdenv.hostPlatform.system}.helium;
-    };
     flags = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [];
@@ -51,19 +42,6 @@ in {
       type = lib.types.bool;
       default = false;
     };
-    nativeMessagingHosts = lib.mkOption {
-      type = lib.types.listOf lib.types.package;
-      default = [];
-      example = lib.literalExpression ''
-        [
-          pkgs.keepassxc
-        ]
-      '';
-      description = ''
-        List of Helium browser native messaging hosts to install.
-      '';
-    };
-
     finalPolicyJson = lib.mkOption {
       type = lib.types.str;
       internal = true;
@@ -73,16 +51,6 @@ in {
     preferences = lib.mkOption {
       type = lib.types.attrsOf lib.types.anything;
       default = {};
-      description = ''
-        Chromium preferences to set in the Default profile.
-        These are merged into ~/.config/net.imput.helium/Default/Preferences.
-        Type: 'helium://prefs-internals/' to search for the json keys and values
-      '';
-      example = lib.literalExpression ''
-        {
-          "browser"."show_home_button" = true;
-        }
-      '';
     };
   };
 
@@ -100,27 +68,16 @@ in {
           if [ -f "$prefs_file" ]; then
             merged=$(${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$prefs_file" - <<< "$nix_prefs")
             if [ -n "$merged" ]; then
-              printf '%s\n' "$merged" > "$prefs_file"
+              run ${pkgs.runtimeShell} -c 'printf "%s\n" "$1" > "$2"' _ "$merged" "$prefs_file"
             fi
           else
-            printf '%s\n' "$nix_prefs" > "$prefs_file"
+            run ${pkgs.runtimeShell} -c 'printf "%s\n" "$1" > "$2"' _ "$nix_prefs" "$prefs_file"
           fi
         '';
       };
     };
 
     xdg = {
-      configFile = lib.mkIf (cfg.nativeMessagingHosts != []) (let
-        nativeMessagingHostsJoined = pkgs.symlinkJoin {
-          name = "helium-native-messaging-hosts";
-          paths = cfg.nativeMessagingHosts;
-        };
-      in {
-        "net.imput.helium/NativeMessagingHosts" = {
-          source = "${nativeMessagingHostsJoined}/etc/chromium/native-messaging-hosts";
-          recursive = true;
-        };
-      });
       mimeApps = lib.mkIf cfg.defaultBrowser {
         enable = true;
         defaultApplications = {

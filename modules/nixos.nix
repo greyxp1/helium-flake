@@ -1,31 +1,27 @@
 {self}: {config, lib, options, ...}: let
-  # Find all Home Manager users who enabled helium
-  enabledUsers = lib.filterAttrs (_: user: user.programs.helium.enable or false) (
-    config.home-manager.users or {}
-  );
+  enabledUsers = lib.filterAttrs (_: user: user.programs.helium.enable or false) (config.home-manager.users or {});
+  policyJsons = lib.unique (map (user: user.programs.helium.finalPolicyJson) (lib.attrValues enabledUsers));
+  policyFile = {
+    text = lib.head policyJsons;
+    mode = "0644";
+  };
 
-  # Generate etc files per user to support multi-user systems
-  policyFiles = lib.mapAttrs' (
-    name: user:
-      lib.nameValuePair "chromium/policies/managed/helium-${name}.json" {
-        text = user.programs.helium.finalPolicyJson;
-        mode = "0644";
-      }
-  )
-  enabledUsers // lib.mapAttrs' (
-    name: user:
-      lib.nameValuePair "helium/policies/managed/helium-${name}.json" {
-        text = user.programs.helium.finalPolicyJson;
-        mode = "0644";
-      }
-  )
-  enabledUsers;
+  policyFiles = lib.genAttrs [
+    "chromium/policies/managed/helium.json"
+    "helium/policies/managed/helium.json"
+  ] (_: policyFile);
 in {
   config = lib.mkMerge [
     (lib.mkIf (options ? home-manager) {
       home-manager.sharedModules = [self.homeModules.helium];
     })
     (lib.mkIf (enabledUsers != {}) {
+      assertions = [
+        {
+          assertion = lib.length policyJsons == 1;
+          message = "programs.helium policies are global; enabled Home Manager users must use identical policies.";
+        }
+      ];
       environment.etc = policyFiles;
     })
   ];

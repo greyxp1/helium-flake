@@ -53,15 +53,13 @@
   src,
   flags ? [],
 }: let
-  # Chromium flags applied to disable update machinery.
   commonFlags = [
+    "--allow-file-access-from-files"
     "--disable-component-update"
     "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'"
     "--check-for-update-interval=0"
     "--no-first-run"
-    "--enable-features=StorageAccessAPI"
-    "--enable-features=NativeNotifications,SystemNotifications"
-    "--restore-last-session"
+    "--enable-features=StorageAccessAPI,NativeNotifications,SystemNotifications,WaylandWindowDecorations"
   ];
 
   addFlags = lib.concatMapStringsSep " \\\n      " (f: "--add-flags \"${f}\"");
@@ -151,7 +149,6 @@ in
       makeWrapper $out/opt/helium/helium $out/bin/helium \
         --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath linuxRuntimeLibs}" \
         --add-flags "--ozone-platform-hint=auto" \
-        --add-flags "--enable-features=WaylandWindowDecorations" \
         ${addFlags (commonFlags ++ flags)}
 
       mkdir -p $out/share/icons/hicolor/256x256/apps
