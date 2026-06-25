@@ -68,10 +68,10 @@ in {
           if [ -f "$prefs_file" ]; then
             merged=$(${pkgs.jq}/bin/jq -s '.[0] * .[1]' "$prefs_file" - <<< "$nix_prefs")
             if [ -n "$merged" ]; then
-              run ${pkgs.runtimeShell} -c 'printf "%s\n" "$1" > "$2"' _ "$merged" "$prefs_file"
+              run ${pkgs.runtimeShell} -c 'cat > "$1"' _ "$prefs_file" <<< "$merged"
             fi
           else
-            run ${pkgs.runtimeShell} -c 'printf "%s\n" "$1" > "$2"' _ "$nix_prefs" "$prefs_file"
+            run ${pkgs.runtimeShell} -c 'cat > "$1"' _ "$prefs_file" <<< "$nix_prefs"
           fi
         '';
       };
