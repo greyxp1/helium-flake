@@ -1,3 +1,7 @@
+# helium-flake
+
+A rewrite of [ntgn's helium-flake](https://gitlab.com/ntgn/helium-flake). Suports `x86_64-linux` only.
+
 ## Quick start
 
 ```sh
@@ -82,8 +86,3 @@ programs.helium.extensions.darkReader = {
   };
 }
 ```
-
-## Credits
-
-- A big chunk of the code is from [ntgn's helium-flake](https://gitlab.com/ntgn/helium-flake).
-- This fork contains my changes on top of their work.
