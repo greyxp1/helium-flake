@@ -19,7 +19,6 @@
   gdk-pixbuf,
   glib,
   gtk3,
-  kdePackages,
   libdrm,
   libgbm,
   libGL,
@@ -125,7 +124,6 @@ in
       systemd
       vulkan-loader
       wayland
-      kdePackages.qtbase
     ];
 
     # Qt libraries are bundled; suppress autoPatchelf warnings for them.
