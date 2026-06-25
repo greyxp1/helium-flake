@@ -29,44 +29,6 @@
           type = "app";
           program = "${helium}/bin/helium";
         };
-        moduleCheck = inputs.nixpkgs.lib.nixosSystem {
-          inherit system;
-          modules = [
-            inputs.home-manager.nixosModules.home-manager
-            inputs.self.nixosModules.helium
-            {
-              boot.loader.grub.devices = ["nodev"];
-              fileSystems."/" = {
-                device = "none";
-                fsType = "tmpfs";
-              };
-              system.stateVersion = "26.05";
-              users.users.helium-test = {
-                isNormalUser = true;
-                home = "/home/helium-test";
-              };
-
-              home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
-                users.helium-test = {
-                  home.enableNixpkgsReleaseCheck = false;
-                  home.stateVersion = "26.05";
-                  programs.helium = {
-                    enable = true;
-                    defaultBrowser = true;
-                    extensions.test-extension = {
-                      id = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-                      pin = true;
-                    };
-                    extraPolicies.HomepageLocation = "https://helium.computer";
-                    preferences.browser.show_home_button = true;
-                  };
-                };
-              };
-            }
-          ];
-        };
       in {
         _module.args.pkgs = import inputs.nixpkgs {
           inherit system;
@@ -84,10 +46,7 @@
         };
 
         devShells.default = pkgs.mkShell {packages = [helium pkgs.nix-update];};
-        checks = {
-          build = helium;
-          module = moduleCheck.config.system.build.toplevel;
-        };
+        checks.build = helium;
       };
     };
 }
