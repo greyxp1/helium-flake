@@ -86,21 +86,6 @@ in {
           "x-scheme-handler/https" = "helium.desktop";
         };
       };
-      desktopEntries.helium = lib.mkIf cfg.defaultBrowser {
-        name = "Helium";
-        exec = "${helium}/bin/helium %U";
-        icon = "helium";
-        terminal = false;
-        categories = [
-          "Network"
-          "WebBrowser"
-        ];
-        mimeType = [
-          "text/html"
-          "x-scheme-handler/http"
-          "x-scheme-handler/https"
-        ];
-      };
     };
   };
 }

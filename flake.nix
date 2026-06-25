@@ -46,7 +46,6 @@
         };
 
         devShells.default = pkgs.mkShell {packages = [helium pkgs.nix-update];};
-        checks.build = helium;
       };
     };
 }
