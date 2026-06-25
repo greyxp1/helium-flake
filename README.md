@@ -43,10 +43,8 @@ programs.helium.extensions.darkReader = {
     programs.helium = {
       enable = true;
       defaultBrowser = true;
-      flags = [
-        "--enable-features=HeliumMiddleClickAutoscroll"
-        "--enable-parallel-downloading"
-      ];
+      extraPolicies.RestoreOnStartup = 1;
+      flags = ["--enable-features=HeliumMiddleClickAutoscroll"];
 
       extensions = {
         sponsorBlock.id = "mnjggcdmjocbbbhaepdhchncahnbgone";
@@ -57,17 +55,27 @@ programs.helium.extensions.darkReader = {
       };
 
       preferences = {
-        browser.show_forward_button = false;
-        session.restore_on_startup = 2;
+        ntp.shortcust_visible = false;
+        auto_pin_new_tab_groups = false;
+        bookmark_bar.show_tab_groups = false;
+
         helium.browser = {
           layout = 2;
+          centered_location_bar = true;
+          mru_tab_cycling = true;
           show_avatar_button = false;
           show_back_button = false;
           show_reload_button = false;
+          rounded_frame = false;
           show_vertical_tabs_collapse_button = false;
           zen_mode = true;
           zen_mode_sidebar_pinned = true;
           zen_mode_top_chrome_pinned = true;
+        };
+
+        browser = {
+          show_forward_button = false;
+          custom_chrome_frame = false;
         };
       };
     };
@@ -77,5 +85,5 @@ programs.helium.extensions.darkReader = {
 
 ## Credits
 
-- Most of the original flake, package, NixOS module, and Home Manager module code is from [ntgn's helium-flake](https://gitlab.com/ntgn/helium-flake).
+- A big chunk of the code is from [ntgn's helium-flake](https://gitlab.com/ntgn/helium-flake).
 - This fork contains my changes on top of their work.
