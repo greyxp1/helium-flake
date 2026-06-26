@@ -47,6 +47,9 @@
   systemd,
   vulkan-loader,
   wayland,
+  ffmpeg,
+  libkrb5,
+  snappy,
   widevineCdm,
   version,
   src,
@@ -117,6 +120,9 @@ in
       systemd
       vulkan-loader
       wayland
+      ffmpeg
+      libkrb5
+      snappy
       widevineCdm
     ];
 
