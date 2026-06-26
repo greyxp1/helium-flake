@@ -5,7 +5,6 @@
   autoPatchelfHook,
   copyDesktopItems,
   makeDesktopItem,
-  # Runtime/build deps
   alsa-lib,
   at-spi2-atk,
   at-spi2-core,
@@ -48,41 +47,35 @@
   systemd,
   vulkan-loader,
   wayland,
+  widevineCdm,
   version,
   src,
   flags ? [],
 }: let
-  commonFlags = [
-    "--allow-file-access-from-files"
-    "--disable-component-update"
-    "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'"
-    "--check-for-update-interval=0"
-    "--no-first-run"
-    "--enable-features=StorageAccessAPI,NativeNotifications,SystemNotifications,WaylandWindowDecorations"
-  ];
+  desktop = makeDesktopItem {
+    name = "helium";
+    exec = "helium %U";
+    icon = "helium";
+    desktopName = "Helium";
+    genericName = "Web Browser";
+    categories = ["Network" "WebBrowser"];
+    mimeTypes = [
+      "application/pdf"
+      "text/html"
+      "text/xml"
+      "application/xhtml+xml"
+      "application/xml"
+      "x-scheme-handler/http"
+      "x-scheme-handler/https"
+    ];
+  };
 
-  addFlags = lib.concatMapStringsSep " \\\n      " (f: "--add-flags \"${f}\"");
-
-  # Libraries that must appear on LD_LIBRARY_PATH at runtime on Linux.
-  linuxRuntimeLibs = [
-    libGL
-    libvdpau
-    libva
-    pipewire
-    alsa-lib
-    libpulseaudio
-  ];
+  mkFlag = f: "--add-flags \"${f}\"";
 in
   stdenv.mkDerivation {
     pname = "helium";
     inherit version src;
-
-    nativeBuildInputs = [
-      makeWrapper
-      autoPatchelfHook
-      copyDesktopItems
-    ];
-
+    nativeBuildInputs = [makeWrapper autoPatchelfHook copyDesktopItems];
     buildInputs = [
       alsa-lib
       at-spi2-atk
@@ -124,9 +117,9 @@ in
       systemd
       vulkan-loader
       wayland
+      widevineCdm
     ];
 
-    # Qt libraries are bundled; suppress autoPatchelf warnings for them.
     autoPatchelfIgnoreMissingDeps = [
       "libQt6Core.so.6"
       "libQt6Gui.so.6"
@@ -136,45 +129,45 @@ in
       "libQt5Widgets.so.5"
     ];
 
-    dontWrapQtApps = true;
-
     installPhase = ''
-      runHook preInstall
+          runHook preInstall
+          mkdir -p $out/bin $out/opt/helium
+          cp -r * $out/opt/helium
+          cp -a ${widevineCdm}/share/google/chrome/WidevineCdm $out/opt/helium/
+          cat > $out/opt/helium/setup-widevine << 'WEOF'
+      #!@shell@
+      set -euo pipefail
+      p="''${XDG_CONFIG_HOME:-$HOME/.config}/net.imput.helium/WidevineCdm"
+      mkdir -p "$p"
+      printf '{"Path":"%s"}' '@store@/opt/helium/WidevineCdm' > "$p/latest-component-updated-widevine-cdm"
+      WEOF
+          substituteInPlace $out/opt/helium/setup-widevine \
+            --replace-fail '@shell@' '${stdenv.shell}' \
+            --replace-fail '@store@' "$out"
+          chmod +x $out/opt/helium/setup-widevine
+          makeWrapper $out/opt/helium/helium-wrapper $out/bin/helium \
+            --set CHROME_VERSION_EXTRA "Nix" \
+            --set FONTCONFIG_FILE "${fontconfig.out}/etc/fonts/fonts.conf" \
+            --prefix GSETTINGS_SCHEMAS_DIR : "${glib.getSchemaPath gtk3}" \
+            --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath [libGL libvdpau libva pipewire alsa-lib libpulseaudio]}" \
+            --add-flags "--ozone-platform-hint=auto" \
+            ${lib.concatStringsSep " \\\n      " (map mkFlag ([
+          "--no-first-run"
+          "--disable-component-update"
+          "--password-store=basic"
+          "--check-for-update-interval=0"
+          "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'"
+          "--enable-features=StorageAccessAPI,NativeNotifications,SystemNotifications,WaylandWindowDecorations"
+        ]
+        ++ flags))} \
+            --run $out/opt/helium/setup-widevine
 
-      mkdir -p $out/bin $out/opt/helium
-      cp -r * $out/opt/helium
-
-      makeWrapper $out/opt/helium/helium $out/bin/helium \
-        --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath linuxRuntimeLibs}" \
-        --add-flags "--ozone-platform-hint=auto" \
-        ${addFlags (commonFlags ++ flags)}
-
-      mkdir -p $out/share/icons/hicolor/256x256/apps
-      cp $out/opt/helium/product_logo_256.png \
-        $out/share/icons/hicolor/256x256/apps/helium.png
-
-      runHook postInstall
+          mkdir -p $out/share/icons/hicolor/256x256/apps
+          cp product_logo_256.png $out/share/icons/hicolor/256x256/apps/helium.png
+          runHook postInstall
     '';
 
-    desktopItems = [
-      (makeDesktopItem {
-        name = "helium";
-        exec = "helium %U";
-        icon = "helium";
-        desktopName = "Helium";
-        genericName = "Web Browser";
-        categories = ["Network" "WebBrowser"];
-        terminal = false;
-        mimeTypes = [
-          "text/html"
-          "text/xml"
-          "application/xhtml+xml"
-          "x-scheme-handler/http"
-          "x-scheme-handler/https"
-        ];
-      })
-    ];
-
+    desktopItems = [desktop];
     meta = {
       description = "Private, fast, and honest web browser based on ungoogled-chromium";
       homepage = "https://helium.computer/";
