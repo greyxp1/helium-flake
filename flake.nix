@@ -11,11 +11,12 @@
       flake.homeModules.helium = import ./modules/home-manager.nix {inherit (inputs) self;};
       flake.nixosModules.helium = import ./modules/nixos.nix {inherit (inputs) self;};
       perSystem = {pkgs, system, ...}: let
+        version = "0.13.6.1";
         helium = pkgs.callPackage ./modules/package.nix {
           widevineCdm = pkgs.widevine-cdm;
-          version = "0.13.6.1";
+          inherit version;
           src = pkgs.fetchurl {
-            url = "https://github.com/imputnet/helium-linux/releases/download/0.13.5.1/helium-0.13.5.1-x86_64_linux.tar.xz";
+            url = "https://github.com/imputnet/helium-linux/releases/download/${version}/helium-${version}-x86_64_linux.tar.xz";
             hash = "sha256-0Gbf4dKk89sKKqcaMV/EoHKDKGj2VoauBmLUoK2HaeY=";
           };
         };
