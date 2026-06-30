@@ -48,6 +48,7 @@ programs.helium.extensions.darkReader = {
       enable = true;
       defaultBrowser = true;
       flags = ["--enable-features=HeliumMiddleClickAutoscroll"];
+
       extraPolicies = {
         RestoreOnStartup = 1;
         DefaultSearchProviderEnabled = true;
@@ -57,10 +58,8 @@ programs.helium.extensions.darkReader = {
  
       extensions = {
         sponsorBlock.id = "mnjggcdmjocbbbhaepdhchncahnbgone";
-        darkReader = {
-          id = "eimadpbcbfnmbkopoojfekhnkhdbieeh";
-          pin = true;
-        };
+        pipView.id = "eaeedemddlledlghhjebjgdmhjekgegd";
+        pipView.pin = true;
       };
 
       preferences = {
