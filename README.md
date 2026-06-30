@@ -47,9 +47,14 @@ programs.helium.extensions.darkReader = {
     programs.helium = {
       enable = true;
       defaultBrowser = true;
-      extraPolicies.RestoreOnStartup = 1;
       flags = ["--enable-features=HeliumMiddleClickAutoscroll"];
-
+      extraPolicies = {
+        RestoreOnStartup = 1;
+        DefaultSearchProviderEnabled = true;
+        DefaultSearchProviderName = "Omnisearch";
+        DefaultSearchProviderSearchURL = "http://localhost:8087/search?q={searchTerms}";
+      };
+ 
       extensions = {
         sponsorBlock.id = "mnjggcdmjocbbbhaepdhchncahnbgone";
         darkReader = {
@@ -74,7 +79,7 @@ programs.helium.extensions.darkReader = {
           show_vertical_tabs_collapse_button = false;
           zen_mode = true;
           zen_mode_sidebar_pinned = true;
-          zen_mode_top_chrome_pinned = true;
+          vertical_right_aligned = true;
         };
 
         browser = {
