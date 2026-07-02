@@ -1,0 +1,80 @@
+name: Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Helium version to update to. Defaults to the latest upstream release.
+        required: false
+        type: string
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Check for update
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_VERSION: ${{ github.event.inputs.version || '' }}
+        run: |
+          set -euo pipefail
+
+          current=$(perl -ne 'print "$1\n" if /version = "([^"]+)";/' flake.nix)
+          latest=${INPUT_VERSION:-$(gh api repos/imputnet/helium-linux/releases/latest --jq '.tag_name')}
+          [ -n "$current" ] && [ -n "$latest" ] || { echo "Could not resolve version" >&2; exit 1; }
+
+          {
+            echo "current=$current"
+            echo "latest=$latest"
+            [ "$current" != "$latest" ] && echo "update_needed=true" || echo "update_needed=false"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Install Nix
+        if: steps.check.outputs.update_needed == 'true'
+        uses: DeterminateSystems/nix-installer-action@v22
+        with:
+          determinate: false
+
+      - name: Update flake
+        if: steps.check.outputs.update_needed == 'true'
+        env:
+          VERSION: ${{ steps.check.outputs.latest }}
+        run: |
+          set -euo pipefail
+
+          url="https://github.com/imputnet/helium-linux/releases/download/$VERSION/helium-$VERSION-x86_64_linux.tar.xz"
+          hash=$(nix store prefetch-file --hash-type sha256 --json "$url" | jq -r '.hash // empty')
+          [ -n "$hash" ] || { echo "Failed to prefetch $url" >&2; exit 1; }
+
+          HASH="$hash" perl -0pi -e '
+            s/version = "[^"]+";/version = "$ENV{VERSION}";/;
+            s/hash = "[^"]+";/hash = "$ENV{HASH}";/;
+          ' flake.nix
+
+      - name: Verify package builds
+        if: steps.check.outputs.update_needed == 'true'
+        run: nix build .#helium --no-link --accept-flake-config
+
+      - name: Commit update
+        if: steps.check.outputs.update_needed == 'true'
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add flake.nix
+          git commit -m "update helium to ${{ steps.check.outputs.latest }}"
+          git push
