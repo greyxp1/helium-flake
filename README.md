@@ -51,13 +51,23 @@ programs.helium.extensions.darkReader = {
 
       extraPolicies = {
         RestoreOnStartup = 1;
+        HighEfficiencyModeEnabled = true;
+        MemorySaverModeSavings = 2;
         DefaultSearchProviderEnabled = true;
-        DefaultSearchProviderName = "Omnisearch";
-        DefaultSearchProviderSearchURL = "http://localhost:8087/search?q={searchTerms}";
+        DefaultSearchProviderName = "Google";
+        DefaultSearchProviderSearchURL = "https://www.google.com/search?q={searchTerms}";
+        DefaultSearchProviderSuggestURL = "https://www.google.com/complete/search?output=chrome&q={searchTerms}";
       };
- 
+
       extensions = {
         sponsorBlock.id = "mnjggcdmjocbbbhaepdhchncahnbgone";
+        deArrow.id = "enamippconapkdmgfgjchkhakpfinmaj";
+        controlPanel.id = "lodcanccmfbpjjpnngindkkmiehimile";
+        re-start.id = "fdodcmjeojbmcgmhcgcelffcekhicnop";
+        protonPass.id = "ghmbeldphafepmbegfdlkpapadhbakde";
+        protonPass.pin = true;
+        raindrop.id = "ldgfbffkinooeloadekpmfoklnobpien";
+        raindrop.pin = true;
         pipView.id = "eaeedemddlledlghhjebjgdmhjekgegd";
         pipView.pin = true;
       };
@@ -67,18 +77,17 @@ programs.helium.extensions.darkReader = {
         auto_pin_new_tab_groups = false;
         bookmark_bar.show_tab_groups = false;
 
-        helium.browser = {
-          layout = 2;
-          centered_location_bar = true;
-          mru_tab_cycling = true;
-          show_avatar_button = false;
-          show_back_button = false;
-          show_reload_button = false;
-          rounded_frame = false;
-          show_vertical_tabs_collapse_button = false;
-          zen_mode = true;
-          zen_mode_sidebar_pinned = true;
-          vertical_right_aligned = true;
+        helium = {
+          services.user_consented = true;
+          browser = {
+            layout = 2;
+            mru_tab_cycling = true;
+            show_avatar_button = false;
+            show_back_button = false;
+            show_reload_button = false;
+            rounded_frame = false;
+            show_vertical_tabs_collapse_button = false;
+          };
         };
 
         browser = {
