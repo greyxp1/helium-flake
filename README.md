@@ -64,12 +64,26 @@ programs.helium.extensions.darkReader = {
         deArrow.id = "enamippconapkdmgfgjchkhakpfinmaj";
         controlPanel.id = "lodcanccmfbpjjpnngindkkmiehimile";
         re-start.id = "fdodcmjeojbmcgmhcgcelffcekhicnop";
-        protonPass.id = "ghmbeldphafepmbegfdlkpapadhbakde";
-        protonPass.pin = true;
-        raindrop.id = "ldgfbffkinooeloadekpmfoklnobpien";
-        raindrop.pin = true;
-        pipView.id = "eaeedemddlledlghhjebjgdmhjekgegd";
-        pipView.pin = true;
+
+        ublock = {
+          id = "blockjmkbacgjkknlgpkjjiijinjdanf";
+          pin = true;
+        };
+
+        protonPass = {
+          id = "ghmbeldphafepmbegfdlkpapadhbakde";
+          pin = true;
+        };
+
+        raindrop = {
+          id = "ldgfbffkinooeloadekpmfoklnobpien";
+          pin = true;
+        };
+
+        pipView = {
+          id = "eaeedemddlledlghhjebjgdmhjekgegd";
+          pin = true;
+        };
       };
 
       preferences = {
@@ -87,6 +101,7 @@ programs.helium.extensions.darkReader = {
             show_reload_button = false;
             rounded_frame = false;
             show_vertical_tabs_collapse_button = false;
+            vertical_right_aligned = true;
           };
         };
 
