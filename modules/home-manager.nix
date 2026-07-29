@@ -1,20 +1,27 @@
-{self}: {config, lib, pkgs, ...}: let
+{mkHelium}: {
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
   cfg = config.programs.helium;
   configDir = "${config.xdg.configHome}/net.imput.helium/";
   extensions = lib.attrValues cfg.extensions;
   pinnedExtensions = lib.filter (extension: extension.pin) extensions;
-  extensionPolicies = lib.optionalAttrs (extensions != []) {
-    ExtensionInstallForcelist = map (extension: extension.id) extensions;
-  } // lib.optionalAttrs (pinnedExtensions != []) {
-    ExtensionSettings = builtins.listToAttrs (
-      map (extension: {
-        name = extension.id;
-        value.toolbar_pin = "force_pinned";
-      })
-      pinnedExtensions
-    );
-  };
-  helium = self.packages.${pkgs.stdenv.hostPlatform.system}.helium.override {inherit (cfg) flags;};
+  extensionPolicies =
+    lib.optionalAttrs (extensions != []) {
+      ExtensionInstallForcelist = map (extension: extension.id) extensions;
+    }
+    // lib.optionalAttrs (pinnedExtensions != []) {
+      ExtensionSettings = builtins.listToAttrs (
+        map (extension: {
+          name = extension.id;
+          value.toolbar_pin = "force_pinned";
+        })
+        pinnedExtensions
+      );
+    };
+  helium = (mkHelium pkgs).override {inherit (cfg) flags;};
 in {
   options.programs.helium = {
     enable = lib.mkEnableOption "Helium browser";
