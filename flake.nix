@@ -5,21 +5,29 @@
     home-manager.url = "github:nix-community/home-manager";
   };
 
-  outputs = inputs:
+  outputs = inputs: let
+    mkHelium = pkgs: let
+      version = "0.14.9.1";
+    in
+      pkgs.callPackage ./modules/package.nix {
+        widevineCdm = pkgs.widevine-cdm;
+        inherit version;
+        src = pkgs.fetchurl {
+          url = "https://github.com/imputnet/helium-linux/releases/download/${version}/helium-${version}-x86_64_linux.tar.xz";
+          hash = "sha256-BmYX3xKpzVsyxRxmypMpXRnp6+Z5wLcaEY8aEYN+Zz0=";
+        };
+      };
+  in
     inputs.flake-parts.lib.mkFlake {inherit inputs;} {
       systems = ["x86_64-linux"];
-      flake.homeModules.helium = import ./modules/home-manager.nix {inherit (inputs) self;};
+      flake.homeModules.helium = import ./modules/home-manager.nix {inherit mkHelium;};
       flake.nixosModules.helium = import ./modules/nixos.nix {inherit (inputs) self;};
-      perSystem = {pkgs, system, ...}: let
-        version = "0.14.9.1";
-        helium = pkgs.callPackage ./modules/package.nix {
-          widevineCdm = pkgs.widevine-cdm;
-          inherit version;
-          src = pkgs.fetchurl {
-            url = "https://github.com/imputnet/helium-linux/releases/download/${version}/helium-${version}-x86_64_linux.tar.xz";
-            hash = "sha256-BmYX3xKpzVsyxRxmypMpXRnp6+Z5wLcaEY8aEYN+Zz0=";
-          };
-        };
+      perSystem = {
+        pkgs,
+        system,
+        ...
+      }: let
+        helium = mkHelium pkgs;
       in {
         _module.args.pkgs = import inputs.nixpkgs {
           inherit system;
