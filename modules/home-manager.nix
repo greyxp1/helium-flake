@@ -21,6 +21,26 @@
         pinnedExtensions
       );
     };
+  defaultPolicies = {
+    RestoreOnStartup = 1;
+    HighEfficiencyModeEnabled = true;
+    MemorySaverModeSavings = 2;
+  };
+  defaultPreferences = {
+    ntp.shortcust_visible = false;
+    auto_pin_new_tab_groups = false;
+    bookmark_bar.show_tab_groups = false;
+    helium = {
+      services.user_consented = true;
+      browser = {
+        layout = 2;
+        mru_tab_cycling = true;
+        show_avatar_button = false;
+        rounded_frame = false;
+        show_vertical_tabs_collapse_button = false;
+      };
+    };
+  };
   helium = (mkHelium pkgs).override {inherit (cfg) flags;};
 in {
   options.programs.helium = {
@@ -43,7 +63,8 @@ in {
     };
     extraPolicies = lib.mkOption {
       type = lib.types.attrsOf lib.types.anything;
-      default = {};
+      default = defaultPolicies;
+      apply = lib.recursiveUpdate defaultPolicies;
     };
     defaultBrowser = lib.mkOption {
       type = lib.types.bool;
@@ -57,7 +78,8 @@ in {
 
     preferences = lib.mkOption {
       type = lib.types.attrsOf lib.types.anything;
-      default = {};
+      default = defaultPreferences;
+      apply = lib.recursiveUpdate defaultPreferences;
     };
   };
 
