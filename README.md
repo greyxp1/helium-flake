@@ -25,6 +25,35 @@ helium.url = "github:greyxp1/helium-flake";
 - `extensions`: Chrome Web Store extensions to force-install.
 - `extraPolicies`: Chromium policy values from `helium://policy/` written to managed policy files.
 
+### Default configuration
+
+```nix
+programs.helium = {
+  extraPolicies = {
+    RestoreOnStartup = 1;
+    HighEfficiencyModeEnabled = true;
+    MemorySaverModeSavings = 2;
+  };
+
+  preferences = {
+    ntp.shortcust_visible = false;
+    auto_pin_new_tab_groups = false;
+    bookmark_bar.show_tab_groups = false;
+
+    helium = {
+      services.user_consented = true;
+      browser = {
+        layout = 2;
+        mru_tab_cycling = true;
+        show_avatar_button = false;
+        rounded_frame = false;
+        show_vertical_tabs_collapse_button = false;
+      };
+    };
+  };
+};
+```
+
 ### Extensions
 
 Each extension needs an `id`. Set `pin = true` to force-pin it to the toolbar.
