@@ -155,7 +155,7 @@ in
             --set CHROME_VERSION_EXTRA "Nix" \
             --set FONTCONFIG_FILE "${fontconfig.out}/etc/fonts/fonts.conf" \
             --prefix GSETTINGS_SCHEMAS_DIR : "${glib.getSchemaPath gtk3}" \
-            --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath [libGL libvdpau libva pipewire alsa-lib libpulseaudio]}" \
+            --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath [gtk3 gdk-pixbuf libGL libvdpau libva pipewire alsa-lib libpulseaudio]}" \
             --add-flags "--ozone-platform-hint=auto" \
             ${lib.concatStringsSep " \\\n      " (map mkFlag ([
           "--no-first-run"
