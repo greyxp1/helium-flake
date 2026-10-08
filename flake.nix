@@ -7,14 +7,14 @@
 
   outputs = inputs: let
     mkHelium = pkgs: let
-      version = "0.18.3.1";
+      version = "0.19.1.2";
     in
       pkgs.callPackage ./modules/package.nix {
         widevineCdm = pkgs.widevine-cdm;
         inherit version;
         src = pkgs.fetchurl {
           url = "https://github.com/imputnet/helium-linux/releases/download/${version}/helium-${version}-x86_64_linux.tar.xz";
-          hash = "sha256-ib2WLKXlFZkWpMS++lqaCPVA0tjNeU8vlV6NXUpGO/I=";
+          hash = "sha256-0x6n9kY3k0rFRDj7mlzS02U+md+jm74fQyuTtjGur60=";
         };
       };
   in
