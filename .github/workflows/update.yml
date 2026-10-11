@@ -9,6 +9,7 @@ on:
         type: string
   schedule:
     - cron: "17 * * * *"
+    - cron: "3 8 * * 1"
 
 permissions:
   contents: read
@@ -19,10 +20,9 @@ concurrency:
 
 jobs:
   prepare:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
-      update_needed: ${{ steps.check.outputs.update_needed }}
-      version: ${{ steps.check.outputs.latest }}
+      update_needed: ${{ steps.update.outputs.changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -34,6 +34,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           INPUT_VERSION: ${{ github.event.inputs.version || '' }}
+          REFRESH_INPUTS: ${{ github.event_name == 'workflow_dispatch' || github.event.schedule == '3 8 * * 1' }}
         run: |
           set -euo pipefail
 
@@ -43,7 +44,12 @@ jobs:
 
           {
             echo "latest=$latest"
-            [ "$current" != "$latest" ] && echo "update_needed=true" || echo "update_needed=false"
+            [ "$current" = "$latest" ] || echo "release_changed=true"
+            if [ "$current" != "$latest" ] || [ "$REFRESH_INPUTS" = true ]; then
+              echo "update_needed=true"
+            else
+              echo "update_needed=false"
+            fi
           } >> "$GITHUB_OUTPUT"
 
       - name: Install Nix
@@ -52,8 +58,8 @@ jobs:
         with:
           determinate: false
 
-      - name: Update flake
-        if: steps.check.outputs.update_needed == 'true'
+      - name: Update release
+        if: steps.check.outputs.release_changed == 'true'
         env:
           VERSION: ${{ steps.check.outputs.latest }}
         run: |
@@ -73,12 +79,23 @@ jobs:
             ' flake.nix
           done
           perl -0pi -e 's/version = "[^"]+";/version = "$ENV{VERSION}";/' flake.nix
+
+      - name: Update inputs
+        id: update
+        if: steps.check.outputs.update_needed == 'true'
+        run: |
+          set -euo pipefail
           nix flake update --accept-flake-config
-          nix flake check --no-build --all-systems --no-update-lock-file --accept-flake-config
+          if git diff --quiet -- flake.nix flake.lock; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            nix flake check --no-build --all-systems --no-update-lock-file --accept-flake-config
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Upload candidate
-        if: steps.check.outputs.update_needed == 'true'
-        uses: actions/upload-artifact@v4
+        if: steps.update.outputs.changed == 'true'
+        uses: actions/upload-artifact@v7
         with:
           name: helium-update
           path: |
@@ -92,7 +109,7 @@ jobs:
     if: needs.prepare.outputs.update_needed == 'true'
     strategy:
       matrix:
-        runner: [ubuntu-latest, ubuntu-24.04-arm]
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout
@@ -101,7 +118,7 @@ jobs:
           ref: ${{ github.sha }}
 
       - name: Download candidate
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: helium-update
 
@@ -127,7 +144,7 @@ jobs:
   commit:
     needs: [prepare, build]
     if: needs.prepare.outputs.update_needed == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
@@ -137,13 +154,12 @@ jobs:
           ref: ${{ github.sha }}
 
       - name: Download candidate
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: helium-update
 
       - name: Commit update
         env:
-          VERSION: ${{ needs.prepare.outputs.version }}
           UPDATE_BRANCH: ${{ github.ref_name }}
         run: |
           set -euo pipefail
@@ -151,5 +167,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add flake.nix flake.lock
-          git commit -m "update helium to $VERSION"
+          git commit -m "updated helium and nix inputs"
           git push origin "HEAD:$UPDATE_BRANCH"
