@@ -11,18 +11,23 @@ on:
     - cron: "17 * * * *"
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: update
   cancel-in-progress: false
 
 jobs:
-  update:
+  prepare:
     runs-on: ubuntu-latest
+    outputs:
+      update_needed: ${{ steps.check.outputs.update_needed }}
+      version: ${{ steps.check.outputs.latest }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
 
       - name: Check for update
         id: check
@@ -37,7 +42,6 @@ jobs:
           [ -n "$current" ] && [ -n "$latest" ] || { echo "Could not resolve version" >&2; exit 1; }
 
           {
-            echo "current=$current"
             echo "latest=$latest"
             [ "$current" != "$latest" ] && echo "update_needed=true" || echo "update_needed=false"
           } >> "$GITHUB_OUTPUT"
@@ -69,20 +73,83 @@ jobs:
             ' flake.nix
           done
           perl -0pi -e 's/version = "[^"]+";/version = "$ENV{VERSION}";/' flake.nix
+          nix flake update --accept-flake-config
+          nix flake check --no-build --all-systems --no-update-lock-file --accept-flake-config
 
-      - name: Verify package builds
+      - name: Upload candidate
         if: steps.check.outputs.update_needed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: helium-update
+          path: |
+            flake.nix
+            flake.lock
+          if-no-files-found: error
+          retention-days: 1
+
+  build:
+    needs: prepare
+    if: needs.prepare.outputs.update_needed == 'true'
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Download candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: helium-update
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v22
+        with:
+          determinate: false
+
+      - name: Build configured Helium
         run: |
-          nix flake check --no-build --all-systems --accept-flake-config
-          nix build .#helium --no-link --accept-flake-config
+          nix build --impure --no-link --no-update-lock-file --accept-flake-config --expr '
+            let
+              flake = builtins.getFlake (toString ./.);
+              system = flake.inputs.nixpkgs.lib.nixosSystem {
+                system = builtins.currentSystem;
+                modules = [flake.nixosModules.helium {
+                  programs.helium.enable = true;
+                }];
+              };
+            in system.config.programs.helium.finalPackage
+          '
+
+  commit:
+    needs: [prepare, build]
+    if: needs.prepare.outputs.update_needed == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Download candidate
+        uses: actions/download-artifact@v4
+        with:
+          name: helium-update
 
       - name: Commit update
-        if: steps.check.outputs.update_needed == 'true'
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          UPDATE_BRANCH: ${{ github.ref_name }}
         run: |
           set -euo pipefail
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add flake.nix
-          git commit -m "update helium to ${{ steps.check.outputs.latest }}"
-          git push
+          git add flake.nix flake.lock
+          git commit -m "update helium to $VERSION"
+          git push origin "HEAD:$UPDATE_BRANCH"
