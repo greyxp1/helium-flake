@@ -8,6 +8,8 @@
   jq,
   coreutils,
 }: let
+  unpackedExtensions = lib.filterAttrs (_: extension: extension.install && extension.path != null) cfg.extensions;
+  extensionDirectory = name: builtins.hashString "sha256" name;
   preferences = writeText "helium-preferences.json" (builtins.toJSON cfg.preferences);
   prepareProfile = writeShellApplication {
     name = "helium-prepare-profile";
@@ -30,10 +32,12 @@
         fi
         mv "$temporary" "$prefs_file"
       ''}
-      ${lib.optionalString (cfg.extensionPaths != []) ''
+      ${lib.optionalString (unpackedExtensions != {}) ''
         extension_root="''${XDG_DATA_HOME:-$HOME/.local/share}/helium/extensions"
-        ${lib.concatImapStringsSep "\n" (index: path: ''
-            extension_dir="$extension_root/${toString index}"
+        ${lib.concatMapAttrsStringSep "\n" (name: extension: let
+            path = extension.path;
+          in ''
+            extension_dir="$extension_root/${extensionDirectory name}"
             if [ "$(cat "$extension_dir/.nix-source" 2>/dev/null)" != ${lib.escapeShellArg (toString path)} ]; then
               rm -rf "$extension_dir"
               mkdir -p "$extension_dir"
@@ -42,29 +46,29 @@
               printf '%s' ${lib.escapeShellArg (toString path)} > "$extension_dir/.nix-source"
             fi
           '')
-          cfg.extensionPaths}
+          unpackedExtensions}
       ''}
     '';
   };
-  extensionDirectories = lib.imap1 (index: _: "$extension_root/${toString index}") cfg.extensionPaths;
+  extensionDirectories = map (name: "$extension_root/${extensionDirectory name}") (lib.attrNames unpackedExtensions);
   wrapperArgs =
     [
       "--add-flags"
       (lib.escapeShellArgs cfg.flags)
       "--inherit-argv0"
     ]
-    ++ lib.optionals (cfg.preferences != {} || cfg.extensionPaths != []) [
+    ++ lib.optionals (cfg.preferences != {} || unpackedExtensions != {}) [
       "--run"
       (lib.getExe prepareProfile)
     ]
-    ++ lib.optionals (cfg.extensionPaths != []) [
+    ++ lib.optionals (unpackedExtensions != {}) [
       "--run"
       ''extension_root="''${XDG_DATA_HOME:-$HOME/.local/share}/helium/extensions"''
       "--add-flags"
       ''"--load-extension=${lib.concatStringsSep "," extensionDirectories}"''
     ];
 in
-  if cfg.flags == [] && cfg.preferences == {} && cfg.extensionPaths == []
+  if cfg.flags == [] && cfg.preferences == {} && unpackedExtensions == {}
   then cfg.package
   else
     symlinkJoin {

@@ -7,10 +7,11 @@
   cfg = config.programs.helium;
   jsonFormat = pkgs.formats.json {};
   extensions = lib.attrValues cfg.extensions;
+  installedExtensions = lib.filter (extension: extension.install && extension.path == null) extensions;
   pinnedExtensions = lib.filter (extension: extension.pin) extensions;
   extensionPolicies =
-    lib.optionalAttrs (extensions != []) {
-      ExtensionInstallForcelist = map (extension: extension.id) extensions;
+    lib.optionalAttrs (installedExtensions != []) {
+      ExtensionInstallForcelist = map (extension: extension.id) installedExtensions;
     }
     // lib.optionalAttrs (pinnedExtensions != []) {
       ExtensionSettings = builtins.listToAttrs (map (extension: {
@@ -57,8 +58,19 @@ in {
       type = lib.types.attrsOf (lib.types.submodule {
         options = {
           id = lib.mkOption {
-            type = lib.types.str;
+            type = lib.types.nullOr lib.types.str;
+            default = null;
             description = "Extension ID, optionally followed by a semicolon and update URL.";
+          };
+          path = lib.mkOption {
+            type = lib.types.nullOr lib.types.path;
+            default = null;
+            description = "Unpacked extension directory copied to writable user data and loaded at startup.";
+          };
+          install = lib.mkOption {
+            type = lib.types.bool;
+            default = true;
+            description = "Install the extension. Disable for extensions already built into Helium.";
           };
           pin = lib.mkOption {
             type = lib.types.bool;
@@ -67,13 +79,12 @@ in {
           };
         };
       });
+      apply = lib.mapAttrs (name: extension:
+        if extension.id == null && (extension.path == null || extension.pin)
+        then throw "Helium extension ${name} needs an id for store installation or pinning, or a path for unpacked installation"
+        else extension);
       default = {};
-      description = "Extensions installed through system-wide Chromium policies.";
-    };
-    extensionPaths = lib.mkOption {
-      type = lib.types.listOf lib.types.path;
-      default = [];
-      description = "Unpacked extensions copied to writable user data directories and loaded at startup.";
+      description = "Store, unpacked, and built-in extensions.";
     };
     extraPolicies = lib.mkOption {
       type = lib.types.attrsOf jsonFormat.type;

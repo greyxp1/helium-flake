@@ -33,8 +33,7 @@ Import and enable the module in your NixOS or Home Manager configuration:
 - `defaultBrowser`: register Helium as the default browser.
 - `flags`: extra command-line flags from `helium://flags/` passed to Helium.
 - `preferences`: options you'd configure in the `Settings` menu. A list of all preferences can be found in `helium://prefs-internals/`.
-- `extensions`: Chrome Web Store extensions to force-install through NixOS.
-- `extensionPaths`: unpacked extension directories, such as a built Equicord browser extension.
+- `extensions`: store extensions, unpacked directories, and built-in extension pins.
 - `extraPolicies`: Chromium policy values from `helium://policy/` written to managed policy files.
 
 ### Default configuration
@@ -68,12 +67,20 @@ programs.helium = {
 
 ### Extensions
 
-Each extension needs an `id`. Set `pin = true` to force-pin it to the toolbar.
+Use `id` for store extensions or `path` for unpacked extensions. Set `pin = true` with an `id` to force-pin an extension. Built-in extensions use `install = false`.
 
 ```nix
-programs.helium.extensions.darkReader = {
-  id = "eimadpbcbfnmbkopoojfekhnkhdbieeh";
-  pin = true;
+programs.helium.extensions = {
+  darkReader = {
+    id = "eimadpbcbfnmbkopoojfekhnkhdbieeh";
+    pin = true;
+  };
+  equicord.path = config.programs.nixcord.browser.finalPackage;
+  ublock = {
+    id = "blockjmkbacgjkknlgpkjjiijinjdanf";
+    install = false;
+    pin = true;
+  };
 };
 ```
 
@@ -113,6 +120,7 @@ programs.helium = {
 
     ublock = {
       id = "blockjmkbacgjkknlgpkjjiijinjdanf";
+      install = false;
       pin = true;
     };
 
