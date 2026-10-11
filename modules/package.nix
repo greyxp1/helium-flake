@@ -73,7 +73,7 @@
     ];
   };
 
-  mkFlag = f: "--add-flags \"${f}\"";
+  mkFlag = f: "--add-flags ${lib.escapeShellArg (lib.escapeShellArg f)}";
 in
   stdenv.mkDerivation {
     pname = "helium";
@@ -162,7 +162,7 @@ in
           "--disable-component-update"
           "--password-store=basic"
           "--check-for-update-interval=0"
-          "--simulate-outdated-no-au='Tue, 31 Dec 2099 23:59:59 GMT'"
+          "--simulate-outdated-no-au=Tue, 31 Dec 2099 23:59:59 GMT"
           "--enable-features=StorageAccessAPI,NativeNotifications,SystemNotifications,WaylandWindowDecorations"
         ]
         ++ flags))} \
@@ -178,7 +178,7 @@ in
       description = "Private, fast, and honest web browser based on ungoogled-chromium";
       homepage = "https://helium.computer/";
       license = lib.licenses.gpl3Only;
-      platforms = ["x86_64-linux"];
+      platforms = ["x86_64-linux" "aarch64-linux"];
       mainProgram = "helium";
     };
   }

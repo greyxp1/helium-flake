@@ -55,18 +55,26 @@ jobs:
         run: |
           set -euo pipefail
 
-          url="https://github.com/imputnet/helium-linux/releases/download/$VERSION/helium-$VERSION-x86_64_linux.tar.xz"
-          hash=$(nix store prefetch-file --hash-type sha256 --json "$url" | jq -r '.hash // empty')
-          [ -n "$hash" ] || { echo "Failed to prefetch $url" >&2; exit 1; }
+          for system in x86_64-linux aarch64-linux; do
+            case "$system" in
+              x86_64-linux) arch=x86_64 ;;
+              aarch64-linux) arch=arm64 ;;
+            esac
+            url="https://github.com/imputnet/helium-linux/releases/download/$VERSION/helium-$VERSION-${arch}_linux.tar.xz"
+            hash=$(nix store prefetch-file --hash-type sha256 --json "$url" | jq -r '.hash // empty')
+            [ -n "$hash" ] || { echo "Failed to prefetch $url" >&2; exit 1; }
 
-          HASH="$hash" perl -0pi -e '
-            s/version = "[^"]+";/version = "$ENV{VERSION}";/;
-            s/hash = "[^"]+";/hash = "$ENV{HASH}";/;
-          ' flake.nix
+            SYSTEM="$system" HASH="$hash" perl -0pi -e '
+              s/($ENV{SYSTEM} = ")sha256-[^"]+";/$1$ENV{HASH}";/;
+            ' flake.nix
+          done
+          perl -0pi -e 's/version = "[^"]+";/version = "$ENV{VERSION}";/' flake.nix
 
       - name: Verify package builds
         if: steps.check.outputs.update_needed == 'true'
-        run: nix build .#helium --no-link --accept-flake-config
+        run: |
+          nix flake check --no-build --all-systems --accept-flake-config
+          nix build .#helium --no-link --accept-flake-config
 
       - name: Commit update
         if: steps.check.outputs.update_needed == 'true'

@@ -2,25 +2,36 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    home-manager.url = "github:nix-community/home-manager";
   };
 
   outputs = inputs: let
     mkHelium = pkgs: let
       version = "0.19.2.1";
+      system = pkgs.stdenv.hostPlatform.system;
+      arch =
+        {
+          x86_64-linux = "x86_64";
+          aarch64-linux = "arm64";
+        }.${
+          system
+        };
+      hashes = {
+        x86_64-linux = "sha256-cHzzGeOj0qoGHKFddUh3vRi4sokghzjIKfywhzvH7Ns=";
+        aarch64-linux = "sha256-bLAgW4tP2Oukf+o4svzTvXPlFbxWBqviqvdYalej5os=";
+      };
     in
       pkgs.callPackage ./modules/package.nix {
         widevineCdm = pkgs.widevine-cdm;
         inherit version;
         src = pkgs.fetchurl {
-          url = "https://github.com/imputnet/helium-linux/releases/download/${version}/helium-${version}-x86_64_linux.tar.xz";
-          hash = "sha256-cHzzGeOj0qoGHKFddUh3vRi4sokghzjIKfywhzvH7Ns=";
+          url = "https://github.com/imputnet/helium-linux/releases/download/${version}/helium-${version}-${arch}_linux.tar.xz";
+          hash = hashes.${system};
         };
       };
   in
     inputs.flake-parts.lib.mkFlake {inherit inputs;} {
-      systems = ["x86_64-linux"];
-      flake.homeModules.helium = import ./modules/home-manager.nix {inherit mkHelium;};
+      systems = ["x86_64-linux" "aarch64-linux"];
+      flake.homeModules.helium = import ./modules/home-manager.nix {inherit (inputs) self;};
       flake.nixosModules.helium = import ./modules/nixos.nix {inherit (inputs) self;};
       perSystem = {
         pkgs,

@@ -1,6 +1,6 @@
 # helium-flake
 
-A rewrite of [ntgn's helium-flake](https://gitlab.com/ntgn/helium-flake). Suports `x86_64-linux` only.
+A rewrite of [ntgn's helium-flake](https://gitlab.com/ntgn/helium-flake).
 
 ## Quick start
 
@@ -10,20 +10,31 @@ nix run github:greyxp1/helium-flake
 
 ## Installation
 
-Add the flake to your inputs:
+Add Helium to your flake inputs:
 
 ```nix
-helium.url = "github:greyxp1/helium-flake";
+inputs.helium.url = "github:greyxp1/helium-flake";
 ```
-Then import the NixOS module.
+
+Import and enable the module in your NixOS or Home Manager configuration:
+
+```nix
+{inputs, ...}: {
+  # Use homeModules.helium for Home Manager.
+  imports = [inputs.helium.nixosModules.helium];
+  programs.helium.enable = true;
+}
+```
 
 ## Options
 
 - `enable`: install Helium.
+- `package`: Helium package to configure.
 - `defaultBrowser`: register Helium as the default browser.
 - `flags`: extra command-line flags from `helium://flags/` passed to Helium.
 - `preferences`: options you'd configure in the `Settings` menu. A list of all preferences can be found in `helium://prefs-internals/`.
-- `extensions`: Chrome Web Store extensions to force-install.
+- `extensions`: Chrome Web Store extensions to force-install through NixOS.
+- `extensionPaths`: unpacked extension directories, such as a built Equicord browser extension.
 - `extraPolicies`: Chromium policy values from `helium://policy/` written to managed policy files.
 
 ### Default configuration
