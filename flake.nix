@@ -6,7 +6,7 @@
 
   outputs = inputs: let
     mkHelium = pkgs: let
-      version = "0.21.1.1";
+      version = "0.21.2.1";
       system = pkgs.stdenv.hostPlatform.system;
       arch =
         {
@@ -16,8 +16,8 @@
           system
         };
       hashes = {
-        x86_64-linux = "sha256-bNfyQBU8ucDN+ie/GmZR3crnOomK/ESak90Q2oO0vUU=";
-        aarch64-linux = "sha256-Zyo+nVge36QUSS6hJlKqvfAucAuOieK1WZQZxw0B3EQ=";
+        x86_64-linux = "sha256-5VwlPggvePta4JTKRlpZ4GiC/XyH6/ODFlvrNWDgtRk=";
+        aarch64-linux = "sha256-cguQtVwZDCUGnSRD8SGgw8T+5wVWQGDXuNPyGaqeHvA=";
       };
     in
       pkgs.callPackage ./modules/package.nix {
